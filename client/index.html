@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Playground</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+      }
+      form {
+        margin-top: 1rem;
+      }
+      label {
+        display: block;
+        margin: 0.5rem 0 0.2rem;
+      }
+      input,
+      textarea,
+      select,
+      button {
+        padding: 0.5rem;
+        width: 100%;
+        max-width: 400px;
+      }
+      pre {
+        background: #f4f4f4;
+        padding: 1rem;
+        overflow: auto;
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>API Playground</h1>
+    <label for="endpoint">Elige un endpoint:</label>
+    <select id="endpoint">
+      <option value="">-- selecciona --</option>
+    </select>
+
+    <div id="form-container"></div>
+    <pre id="response"></pre>
+
+    <!-- reemplaza TODO el <script> con esto -->
+    <script>
+      const endpoints = [
+        {
+          name: "Listar TrainObjectives",
+          method: "GET",
+          path: "/api/v1/train_objectives",
+        },
+        {
+          name: "Signup",
+          method: "POST",
+          path: "/api/v1/signup",
+          body: ["username", "email", "password"],
+        },
+        {
+          name: "Login",
+          method: "POST",
+          path: "/api/v1/login",
+          body: ["username", "password"],
+        },
+        {
+          name: "Crear TrainObjective",
+          method: "POST",
+          path: "/api/v1/train_objectives",
+          body: ["name", "description"],
+        },
+        {
+          name: "Obtener TrainObjective",
+          method: "GET",
+          path: "/api/v1/train_objectives/{objective_id}",
+          params: ["objective_id"],
+        },
+        {
+          name: "Agregar Completion",
+          method: "POST",
+          path: "/api/v1/train_objectives/{objective_id}/completions",
+          params: ["objective_id"],
+          body: ["prompt", "completion"],
+        },
+        {
+          name: "Listar Completions",
+          method: "GET",
+          path: "/api/v1/train_objectives/{objective_id}/completions",
+          params: ["objective_id"],
+        },
+        {
+          name: "Iniciar TrainingJob",
+          method: "POST",
+          path: "/api/v1/train_objectives/{objective_id}/training_jobs",
+          params: ["objective_id"],
+        },
+        {
+          name: "Listar TrainingJobs",
+          method: "GET",
+          path: "/api/v1/train_objectives/{objective_id}/training_jobs",
+          params: ["objective_id"],
+        },
+      ];
+
+      const sel = document.getElementById("endpoint");
+      const formContainer = document.getElementById("form-container");
+      const resp = document.getElementById("response");
+
+      // Llenar select
+      endpoints.forEach((ep, i) => {
+        const o = document.createElement("option");
+        o.value = i;
+        o.textContent = `${ep.method} ${ep.path}`;
+        sel.appendChild(o);
+      });
+
+      sel.addEventListener("change", () => {
+        formContainer.innerHTML = "";
+        resp.textContent = "";
+        const idx = sel.value;
+        if (idx === "") return;
+
+        const ep = endpoints[idx];
+        const form = document.createElement("form");
+        form.id = "api-form";
+
+        // Campo para user_id header
+        const userLabel = document.createElement("label");
+        userLabel.textContent = "X-User-ID (opcional)";
+        const userInput = document.createElement("input");
+        userInput.name = "x_user_id";
+        userInput.placeholder = "Ej: 1";
+        form.appendChild(userLabel);
+        form.appendChild(userInput);
+
+        // Campos de path params
+        if (ep.params) {
+          ep.params.forEach((p) => {
+            const lbl = document.createElement("label");
+            lbl.textContent = p;
+            const inp = document.createElement("input");
+            inp.name = p;
+            inp.required = true;
+            form.appendChild(lbl);
+            form.appendChild(inp);
+          });
+        }
+
+        // Campos de body
+        if (ep.body) {
+          ep.body.forEach((b) => {
+            const lbl = document.createElement("label");
+            lbl.textContent = b;
+            let inp;
+            if (b === "description" || b === "completion") {
+              inp = document.createElement("textarea");
+              inp.rows = 4;
+            } else {
+              inp = document.createElement("input");
+            }
+            inp.name = b;
+            inp.required = true;
+            form.appendChild(lbl);
+            form.appendChild(inp);
+          });
+        }
+
+        const btn = document.createElement("button");
+        btn.type = "submit";
+        btn.textContent = "Enviar";
+        form.appendChild(btn);
+
+        formContainer.appendChild(form);
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          resp.textContent = "Cargando...";
+          let url = ep.path;
+          if (ep.params) {
+            ep.params.forEach((p) => {
+              const v = form[p].value.trim();
+              url = url.replace(`{${p}}`, encodeURIComponent(v));
+            });
+          }
+
+          const opts = { method: ep.method, headers: {} };
+
+          // Header opcional X-User-ID
+          const uid = form["x_user_id"].value.trim();
+          if (uid !== "") {
+            opts.headers["X-User-ID"] = uid;
+          }
+
+          // Body
+          if (ep.body) {
+            const body = {};
+            ep.body.forEach((b) => {
+              body[b] = form[b].value;
+            });
+            opts.headers["Content-Type"] = "application/json";
+            opts.body = JSON.stringify(body);
+          }
+
+          try {
+            const res = await fetch(url, opts);
+            const txt = await res.text();
+            try {
+              resp.textContent = JSON.stringify(JSON.parse(txt), null, 2);
+            } catch {
+              resp.textContent = txt;
+            }
+          } catch (err) {
+            resp.textContent = err.toString();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

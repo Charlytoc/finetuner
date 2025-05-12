@@ -1,0 +1,8 @@
+.env
+data
+
+test_connection.py
+__pycache__
+
+venv
+.venv
