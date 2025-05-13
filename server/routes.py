@@ -1,12 +1,18 @@
+
+import os
+
 import uuid
 from datetime import datetime
 from typing import List
+
+import httpx
+from fastapi import Request
 
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from server.utils.helpers import get_user_id
-
+from server.utils.auth import get_access_token
 from server.db.models import TrainObjective, Completion, TrainingJob, User
 from server.db.core import get_db
 from server.utils.schemas import (
@@ -212,3 +218,52 @@ def list_training_jobs(
 ):
     jobs = db.query(TrainingJob).filter_by(train_objective_id=objective_id).all()
     return jobs
+
+
+SENTENCIAS_API_URL = os.getenv("SENTENCIAS_API_URL", "http://localhost:8006")
+
+
+@router.get("/sentencia/{hash}", summary="Obtener una sentencia ciudadana")
+async def proxy_get_sentence(hash: str):
+    access_token = get_access_token()
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{SENTENCIAS_API_URL}/api/sentencia/{hash}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
+    return response.json()
+
+
+@router.put("/sentencia/{hash}", summary="Actualizar una sentencia ciudadana")
+async def proxy_update_sentence(hash: str, request: Request):
+    body = await request.json()
+    access_token = get_access_token()
+    async with httpx.AsyncClient() as client:
+        response = await client.put(
+            f"{SENTENCIAS_API_URL}/api/sentencia/{hash}",
+            json=body,
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
+    return response.json()
+
+
+@router.post(
+    "/sentencia/{hash}/request-changes",
+    summary="Solicitar cambios a una sentencia ciudadana",
+)
+async def proxy_request_changes(hash: str, request: Request):
+    body = await request.json()
+    access_token = get_access_token()
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.post(
+            f"{SENTENCIAS_API_URL}/api/sentencia/{hash}/request-changes",
+            json=body,
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
+    return response.json()

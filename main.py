@@ -2,8 +2,6 @@ import os
 import httpx
 from urllib.parse import urlencode
 
-from fastapi.responses import FileResponse
-
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -76,39 +74,39 @@ async def auth_and_cors(request: Request, call_next):
                 status_code=403, content={"detail": f"IP '{client_ip}' no permitida."}
             )
 
-    CHECK_AUTH = ENVIRONMENT == "prod"
-    if CHECK_AUTH:
-        auth: str = request.headers.get("Authorization", "")
-        if not auth.startswith("Bearer "):
-            printer.yellow("No se encontró el token en el header")
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Missing or malformed Authorization header."},
-            )
-        token = auth.split(" ", 1)[1]
+    # CHECK_AUTH = ENVIRONMENT == "prod"
+    # if CHECK_AUTH:
+    #     auth: str = request.headers.get("Authorization", "")
+    #     if not auth.startswith("Bearer "):
+    #         printer.yellow("No se encontró el token en el header")
+    #         return JSONResponse(
+    #             status_code=401,
+    #             content={"detail": "Missing or malformed Authorization header."},
+    #         )
+    #     token = auth.split(" ", 1)[1]
 
-        validate_url = os.getenv(
-            "TOKEN_VALIDATION_URL",
-            "https://declaraciones.pjedomex.gob.mx/declaraciones/gestion",
-        )
+    #     validate_url = os.getenv(
+    #         "TOKEN_VALIDATION_URL",
+    #         "https://declaraciones.pjedomex.gob.mx/declaraciones/gestion",
+    #     )
 
-        payload = {"access_token": token}
-        printer.yellow("Validando token...")
-        async with httpx.AsyncClient(timeout=10) as client:
-            headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    #     payload = {"access_token": token}
+    #     printer.yellow("Validando token...")
+    #     async with httpx.AsyncClient(timeout=10) as client:
+    #         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-            resp = await client.post(validate_url, data=payload, headers=headers)
+    #         resp = await client.post(validate_url, data=payload, headers=headers)
 
-            body = urlencode(payload)
-            resp = await client.post(validate_url, data=body, headers=headers)
-        if resp.status_code != 200:
-            return JSONResponse(
-                status_code=401, content={"detail": "Invalid or expired token."}
-            )
-    else:
-        printer.yellow(
-            "No se validó el token, se asume que es un request de desarrollo"
-        )
+    #         body = urlencode(payload)
+    #         resp = await client.post(validate_url, data=body, headers=headers)
+    #     if resp.status_code != 200:
+    #         return JSONResponse(
+    #             status_code=401, content={"detail": "Invalid or expired token."}
+    #         )
+    # else:
+    #     printer.yellow(
+    #         "No se validó el token, se asume que es un request de desarrollo"
+    #     )
     printer.green("Una solicitud fue permitida con éxito")
     return await call_next(request)
 
@@ -120,13 +118,9 @@ PORT = int(os.getenv("PORT", 8005))
 
 # Justo después de app.include_router(router):
 if ENVIRONMENT != "prod":
-    app.mount("/client", StaticFiles(directory="client", html=True), name="client")
+    app.mount("/client", StaticFiles(directory="client/dist", html=True), name="client")
 
-    @app.get("/client", include_in_schema=False)
-    async def serve_client_index():
-        return FileResponse(
-            os.path.join("client", "index.html"), media_type="text/html"
-        )
+    app.mount("/assets", StaticFiles(directory="client/dist/assets"), name="assets")
 
 
 if __name__ == "__main__":
