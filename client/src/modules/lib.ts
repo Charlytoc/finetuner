@@ -19,9 +19,9 @@ export const updateSentence = async (hash: string, sentence: string) => {
   return response.data;
 };
 
-export const requestChanges = async (hash: string, changes: string) => {
+export const requestChanges = async (hash: string, feedback: string) => {
   const response = await api.post(`/sentencia/${hash}/request-changes`, {
-    changes,
+    changes: feedback,
   });
   return response.data;
 };

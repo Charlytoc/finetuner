@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useStore } from "../modules/store";
 import { Markdowner } from "./Markdowner";
 import { requestChanges, updateSentence } from "../modules/lib";
+import { SuperButton } from "./SuperButton";
 
 export const SentenceEditor = () => {
   const sentence = useStore((state) => state.sentence);
@@ -102,7 +103,7 @@ export const SentenceEditor = () => {
             onChange={(e) => setAiPrompt(e.target.value)}
             rows={3}
           />
-          <button
+          <SuperButton
             className="button-pj mt-2"
             onClick={async () => {
               try {
@@ -111,6 +112,7 @@ export const SentenceEditor = () => {
                   aiPrompt
                 );
                 setProposedSentence(changes.sentence);
+                setManualText(changes.sentence);
                 setAiPrompt("");
               } catch (error) {
                 console.error(error);
@@ -118,7 +120,7 @@ export const SentenceEditor = () => {
             }}
           >
             Enviar solicitud
-          </button>
+          </SuperButton>
         </div>
       )}
 

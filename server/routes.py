@@ -39,8 +39,6 @@ def make_slug(name: str) -> str:
     base = name.lower().replace(" ", "-")
     return f"{base}-{uuid.uuid4().hex[:6]}"
 
-
-# Routes
 @router.post("/signup", response_model=UserRead, summary="Crear un nuevo usuario")
 def signup(data: UserCreate, db: Session = Depends(get_db)):
     existing = (
@@ -122,7 +120,6 @@ def get_train_objective(objective_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, detail="TrainObjective no encontrado")
     return obj
 
-
 @router.post(
     "/train_objectives/{objective_id}/completions",
     response_model=CompletionRead,
@@ -156,7 +153,6 @@ def add_completion(
         created_at=comp.created_at,
     )
 
-
 @router.get(
     "/train_objectives/{objective_id}/completions",
     response_model=List[CompletionRead],
@@ -178,7 +174,6 @@ def list_completions(
         )
         for c in completions
     ]
-
 
 @router.post(
     "/train_objectives/{objective_id}/training_jobs",
@@ -205,7 +200,6 @@ def start_training_job(
     db.refresh(job)
     return job
 
-
 @router.get(
     "/train_objectives/{objective_id}/training_jobs",
     response_model=List[TrainingJobRead],
@@ -221,7 +215,6 @@ def list_training_jobs(
 
 
 SENTENCIAS_API_URL = os.getenv("SENTENCIAS_API_URL", "http://localhost:8006")
-
 
 @router.get("/sentencia/{hash}", summary="Obtener una sentencia ciudadana")
 async def proxy_get_sentence(hash: str):
