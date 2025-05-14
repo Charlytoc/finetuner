@@ -98,20 +98,23 @@ export const SentenceEditor = () => {
         <FileUploader onUploadSuccess={handleUploadSuccess} />
       </div>
 
-      <div className="flex flex-row items-center gap-4 mt-10 bg-gray-200 p-4 rounded-md w-full">
-        {editMode === "manual" ? (
-          <ManualEditor
-            value={draft}
-            onChange={setDraft}
-            onSave={handleSaveManual}
-            loading={loading}
-          />
-        ) : (
-          <Markdowner markdown={draft || sentence?.sentence || ""} />
-        )}
-      </div>
+      {sentence && (
+        <div className="flex flex-row items-center gap-4 mt-10 bg-gray-200 p-4 rounded-md w-full">
+          {editMode === "manual" ? (
+            <ManualEditor
+              value={draft}
+              onChange={setDraft}
+              onSave={handleSaveManual}
+              loading={loading}
+              onCancel={() => setEditMode("none")}
+            />
+          ) : (
+            <Markdowner markdown={draft || sentence?.sentence || ""} />
+          )}
+        </div>
+      )}
 
-      {editMode === "none" && sentence?.status !== "ERROR" && (
+      {editMode === "none" && sentence && sentence?.status !== "ERROR" && (
         <div className="flex flex-col items-center gap-4 mt-4">
           <h2 className="text-md mt-4">
             ¿Qué quieres cambiar de esta sentencia?
@@ -133,6 +136,7 @@ export const SentenceEditor = () => {
           onPromptChange={setAiPrompt}
           onSubmit={handleAIPromptSubmit}
           loading={loading}
+          onCancel={() => setEditMode("none")}
         />
       )}
 

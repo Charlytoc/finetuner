@@ -44,6 +44,7 @@ export const useStore = create<StoreState>()(
       },
       logout: () => {
         set({ user: null });
+        set({ sentence: null });
       },
     }),
     {

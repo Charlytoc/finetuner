@@ -18,7 +18,7 @@ export const Navbar = () => {
           <div className="flex flex-row justify-between items-center w-fit gap-4 p-4 ">
             <span className="text-gray-800">{user?.username}</span>
             <button
-              className="bg-red-500 text-white px-4 py-2 rounded-md cursor-pointer"
+              className="button-pj text-white  cursor-pointer"
               onClick={logout}
             >
               Salir
