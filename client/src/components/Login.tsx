@@ -1,15 +1,15 @@
 import { useStore } from "../modules/store";
 import { Modal } from "./Modal";
 import { useState } from "react";
+import { SuperButton } from "./SuperButton";
 
 export default function Login() {
-  const { user, login, logout } = useStore();
+  const { user, login } = useStore();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    login(username, password);
+  const handleSubmit = async () => {
+    await login(username, password);
   };
 
   return (
@@ -21,7 +21,10 @@ export default function Login() {
               Iniciar sesión
             </h1>
             <form
-              onSubmit={handleSubmit}
+              onSubmit={(e) => {
+                e.preventDefault();
+                // handleSubmit();
+              }}
               className="space-y-5 flex flex-col justify-center items-center"
             >
               <div>
@@ -48,12 +51,9 @@ export default function Login() {
                   required
                 />
               </div>
-              <button
-                type="submit"
-                className="w-100 py-3 px-4 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition duration-200 "
-              >
+              <SuperButton className="button-pj" onClick={handleSubmit}>
                 Entrar
-              </button>
+              </SuperButton>
             </form>
           </div>
         </Modal>

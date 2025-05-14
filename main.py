@@ -1,6 +1,7 @@
 import os
-import httpx
-from urllib.parse import urlencode
+
+# import httpx
+# from urllib.parse import urlencode
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -115,7 +116,6 @@ app.include_router(router)
 
 PORT = int(os.getenv("PORT", 8005))
 
-
 # Justo después de app.include_router(router):
 if ENVIRONMENT != "prod":
     app.mount("/client", StaticFiles(directory="client/dist", html=True), name="client")
@@ -126,4 +126,4 @@ if ENVIRONMENT != "prod":
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=PORT)
+    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)

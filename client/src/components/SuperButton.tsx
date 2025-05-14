@@ -1,15 +1,19 @@
 import { useState } from "react";
 
 interface SuperButtonProps {
-  onClick: () => Promise<void>;
   children: React.ReactNode;
+  onClick?: () => Promise<void>;
   className?: string;
+  type?: "button" | "submit" | "reset";
+  disabled?: boolean;
 }
 
 export const SuperButton = ({
-  onClick,
   children,
+  onClick,
   className = "",
+  type = "button",
+  disabled = false,
 }: SuperButtonProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,10 +22,12 @@ export const SuperButton = ({
     setLoading(true);
     setError(null);
     try {
-      await onClick();
+      if (onClick) {
+        await onClick();
+      }
     } catch (err) {
       setError("Hubo un error 😥");
-      console.error(err);
+      console.error("ERROR DEL BOTON", err);
     } finally {
       setLoading(false);
     }
@@ -30,11 +36,12 @@ export const SuperButton = ({
   return (
     <div className="flex flex-col items-center">
       <button
+        type={type}
         className={`${className} ${
           loading ? "opacity-50 cursor-not-allowed" : ""
         }`}
         onClick={handleClick}
-        disabled={loading}
+        disabled={disabled || loading}
       >
         {loading ? "Cargando..." : children}
       </button>

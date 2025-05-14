@@ -25,3 +25,13 @@ export const requestChanges = async (hash: string, feedback: string) => {
   });
   return response.data;
 };
+
+export const generateSentenceBrief = async (formData: FormData) => {
+  try {
+    const response = await api.post(`/generate-sentence-brief`, formData);
+    return response.data;
+  } catch (error) {
+    console.error("Error al generar resumen de la sentencia:", error);
+    throw new Error("Hubo un error al generar el resumen de la sentencia");
+  }
+};
