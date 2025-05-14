@@ -116,11 +116,8 @@ app.include_router(router)
 
 PORT = int(os.getenv("PORT", 8005))
 
-# Justo después de app.include_router(router):
-if ENVIRONMENT != "prod":
-    app.mount("/client", StaticFiles(directory="client/dist", html=True), name="client")
-
-    app.mount("/assets", StaticFiles(directory="client/dist/assets"), name="assets")
+app.mount("/", StaticFiles(directory="client/dist", html=True), name="client")
+app.mount("/assets", StaticFiles(directory="client/dist/assets"), name="assets")
 
 
 if __name__ == "__main__":
