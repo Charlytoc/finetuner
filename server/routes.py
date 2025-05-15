@@ -219,6 +219,7 @@ def list_training_jobs(
 
 
 SENTENCIAS_API_URL = os.getenv("SENTENCIAS_API_URL", "http://localhost:8006")
+MAX_TIMEOUT = int(os.getenv("MAX_TIMEOUT", 540.0))
 
 
 @router.get("/sentencia/{hash}", summary="Obtener una sentencia ciudadana")
@@ -256,7 +257,7 @@ async def proxy_update_sentence(hash: str, request: Request):
 async def proxy_request_changes(hash: str, request: Request):
     body = await request.json()
     access_token = get_access_token()
-    async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=MAX_TIMEOUT) as client:
         response = await client.post(
             f"{SENTENCIAS_API_URL}/api/sentencia/{hash}/request-changes",
             json=body,
@@ -285,7 +286,7 @@ async def generate_sentence_brief_proxy(request: Request):
         "Content-Type": content_type,
     }
 
-    async with httpx.AsyncClient(timeout=420.0) as client:
+    async with httpx.AsyncClient(timeout=MAX_TIMEOUT) as client:
         response = await client.post(
             f"{SENTENCIAS_API_URL}/api/generate-sentence-brief",
             content=body,
