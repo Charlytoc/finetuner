@@ -18,9 +18,11 @@ type Sentence = {
 type StoreState = {
   user: User | null;
   sentence: Sentence | null;
+  warning: string | null;
   login: (email: string, password: string) => void;
   logout: () => void;
-  setSentence: (sentence: Sentence) => void;
+  setSentence: (sentence: Sentence | null) => void;
+  setWarning: (warning: string | null) => void;
 };
 
 export const useStore = create<StoreState>()(
@@ -28,7 +30,9 @@ export const useStore = create<StoreState>()(
     (set) => ({
       user: null,
       sentence: null,
-      setSentence: (sentence: Sentence) => set({ sentence }),
+      warning: null,
+      setSentence: (sentence: Sentence | null) => set({ sentence }),
+      setWarning: (warning: string | null) => set({ warning }),
       login: async (username: string, password: string) => {
         const user = await loginRequest(username, password);
         console.log(user, "user");

@@ -40,7 +40,36 @@ export const InstructionsModal = () => {
             <li>
               Haz clic en el botón <strong>"Editar manualmente"</strong>.
             </li>
-            <li>Realiza los cambios que consideres necesarios.</li>
+            <li>
+              Realiza los cambios que consideres necesarios seleccionando el
+              texto que te interesa y escribiendo lo que quieres cambiar.
+            </li>
+            <li>
+              Puedes usar <strong>atajos de teclado</strong> para editar más
+              rápido:
+              <ul className="list-disc list-inside ml-4">
+                <li>
+                  💪 <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + <kbd>B</kbd>: Negrita
+                </li>
+                <li>
+                  ✨ <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + <kbd>I</kbd>: Cursiva
+                </li>
+                <li>
+                  ↩️ <kbd>Enter</kbd>: Salto de línea
+                </li>
+                <li>
+                  ➡️ <kbd>Tab</kbd>: Identar o ir al siguiente párrafo (depende
+                  del navegador)
+                </li>
+
+                <li>
+                  ⏪ <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + <kbd>Z</kbd>: Deshacer
+                </li>
+                <li>
+                  ⏩ <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + <kbd>Y</kbd>: Rehacer
+                </li>
+              </ul>
+            </li>
             <li>
               Haz clic en <strong>"Finalizar edición"</strong> para guardar los
               cambios.

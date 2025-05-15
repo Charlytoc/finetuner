@@ -2,8 +2,9 @@ import { useState } from "react";
 
 interface SuperButtonProps {
   children: React.ReactNode;
-  onClick?: () => Promise<void>;
+  onClick?: () => Promise<void> | void;
   className?: string;
+  loadingText?: string;
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
 }
@@ -14,6 +15,7 @@ export const SuperButton = ({
   className = "",
   type = "button",
   disabled = false,
+  loadingText = "Cargando...",
 }: SuperButtonProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export const SuperButton = ({
         onClick={handleClick}
         disabled={disabled || loading}
       >
-        {loading ? "Cargando..." : children}
+        {loading ? loadingText : children}
       </button>
       {error && <span className="text-red-500 text-sm mt-1">{error}</span>}
     </div>

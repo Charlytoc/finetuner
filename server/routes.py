@@ -282,10 +282,10 @@ async def generate_sentence_brief_proxy(request: Request):
 
     headers = {
         "Authorization": f"Bearer {access_token}",
-        "Content-Type": content_type,  # MUY IMPORTANTE: se necesita el boundary
+        "Content-Type": content_type,
     }
 
-    async with httpx.AsyncClient(timeout=300.0) as client:
+    async with httpx.AsyncClient(timeout=420.0) as client:
         response = await client.post(
             f"{SENTENCIAS_API_URL}/api/generate-sentence-brief",
             content=body,

@@ -1,13 +1,13 @@
 import { Navbar } from "./components/Navbar";
-import { ParamsReader } from "./components/ParamReader";
 import { SentenceEditor } from "./components/SentenceEditor";
 import { Toaster } from "react-hot-toast";
+import { ContinuePrevious } from "./components/ContinuePrevious";
 function App() {
   return (
     <>
       <Toaster />
       <Navbar />
-      <ParamsReader />
+      <ContinuePrevious />
       <SentenceEditor />
     </>
   );

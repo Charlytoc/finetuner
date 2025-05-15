@@ -34,6 +34,24 @@ export ENVIRONMENT="$MODE"
 echo "ENVIRONMENT='$ENVIRONMENT'"
 
 # ----------------------------------------
+# 1.5) Verificar contenedor PostgreSQL
+# ----------------------------------------
+PG_CONTAINER="postgres_trainer"
+PG_STATUS=$(docker ps -a --filter "name=^${PG_CONTAINER}$" --format "{{.Status}}")
+
+if [[ -z "$PG_STATUS" ]]; then
+  echo "❌ El contenedor '$PG_CONTAINER' no existe. Debes crearlo primero con el script de setup."
+  exit 1
+elif [[ "$PG_STATUS" != Up* ]]; then
+  echo "🔁 El contenedor '$PG_CONTAINER' está detenido. Iniciándolo…"
+  docker start "$PG_CONTAINER" > /dev/null
+else
+  echo "✅ El contenedor '$PG_CONTAINER' ya está corriendo."
+fi
+
+
+
+# ----------------------------------------
 # 2) Creamos venv si hace falta
 # ----------------------------------------
 # Escoger python3 o python

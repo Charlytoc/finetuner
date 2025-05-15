@@ -11,6 +11,9 @@ from contextlib import asynccontextmanager
 
 from server.utils.printer import Printer
 from server.routes import router
+from dotenv import load_dotenv
+
+load_dotenv()
 
 printer = Printer("MAIN")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "prod").lower().strip()
@@ -114,7 +117,8 @@ async def auth_and_cors(request: Request, call_next):
 
 app.include_router(router)
 
-PORT = int(os.getenv("PORT", 8005))
+PORT = int(os.getenv("PORT", 8006))
+printer.green("🚀 El puerto escuchado es: ", PORT)
 
 app.mount("/", StaticFiles(directory="client/dist", html=True), name="client")
 app.mount("/assets", StaticFiles(directory="client/dist/assets"), name="assets")

@@ -1,38 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useStore } from "../modules/store";
-import { requestChanges, updateSentence } from "../modules/lib";
+import { updateSentence } from "../modules/lib";
 import { Markdowner } from "./Markdowner";
 import { InstructionsModal } from "./Instructions";
 import { FileUploader } from "./FileUploader";
-
 import { AIPromptEditor } from "./AIPromptEditor";
-import { ManualEditor } from "./ManualEditor";
-import { EditActions } from "./EditActions";
 import type { EditMode } from "./types";
 
 export const SentenceEditor = () => {
   const sentence = useStore((state) => state.sentence);
   const setSentence = useStore((s) => s.setSentence);
+  const setWarning = useStore((s) => s.setWarning);
+  const warning = useStore((s) => s.warning);
 
   const [editMode, setEditMode] = useState<EditMode>("none");
-  const [draft, setDraft] = useState(sentence?.sentence || "");
-  const [aiPrompt, setAiPrompt] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    setDraft(sentence?.sentence || "");
-  }, [sentence?.sentence]);
-
-  const handleSaveManual = async () => {
-    if (!draft.trim()) return;
+  const handleSaveManual = async (newSentence: string) => {
+    if (!newSentence.trim()) return;
     setLoading(true);
     try {
       setSentence({
         hash: sentence?.hash || "",
-        sentence: draft,
+        sentence: newSentence,
         status: "SUCCESS",
       });
-      await updateSentence(sentence?.hash || "", draft);
+      await updateSentence(sentence?.hash || "", newSentence);
       setEditMode("none");
     } catch (err) {
       console.error(err);
@@ -45,71 +38,39 @@ export const SentenceEditor = () => {
     brief,
     hash,
     status,
+    warning,
   }: {
     brief: string;
     hash: string;
     status: string;
+    warning: string;
   }) => {
-    setDraft(brief);
     setSentence({
       hash,
       sentence: brief,
       status: status as "SUCCESS" | "ERROR",
     });
+    setWarning(warning);
     setEditMode("none");
-  };
-
-  const handleAIPromptSubmit = async () => {
-    if (!aiPrompt.trim()) return;
-    setLoading(true);
-    try {
-      const changes = await requestChanges(sentence?.hash || "", aiPrompt);
-      setDraft(changes.sentence);
-      setEditMode("none");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAccept = async () => {
-    if (!draft.trim()) return;
-    setLoading(true);
-    try {
-      setSentence({
-        hash: sentence?.hash || "",
-        sentence: draft,
-        status: "SUCCESS",
-      });
-      await updateSentence(sentence?.hash || "", draft);
-      setEditMode("none");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-auto flex flex-col items-center mb-20">
-      <div className="flex flex-row items-center gap-4 mt-10 bg-gray-100 p-4 rounded-md w-fit justify-center">
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-100 p-4 rounded-md w-fit sm:justify-center">
         <InstructionsModal />
         <FileUploader onUploadSuccess={handleUploadSuccess} />
       </div>
 
-      {sentence && (
-        <div className="flex flex-row items-center gap-4 mt-10 bg-gray-200 p-4 rounded-md w-full">
-          {editMode === "manual" ? (
-            <ManualEditor
-              value={draft}
-              onChange={setDraft}
-              onSave={handleSaveManual}
-              loading={loading}
-              onCancel={() => setEditMode("none")}
-            />
-          ) : (
-            <Markdowner markdown={draft || sentence?.sentence || ""} />
+      {sentence && editMode !== "ai" && (
+        <div className="flex flex-col items-center gap-4 mt-10 bg-gray-200 p-4 rounded-md w-full">
+          <Markdowner
+            markdown={sentence?.sentence || ""}
+            allowEdit={editMode === "manual"}
+            onSave={handleSaveManual}
+            onCancel={() => setEditMode("none")}
+          />
+          {warning && editMode === "none" && (
+            <Markdowner className="text-red-400 text-sm" markdown={warning} />
           )}
         </div>
       )}
@@ -132,21 +93,8 @@ export const SentenceEditor = () => {
 
       {editMode === "ai" && (
         <AIPromptEditor
-          prompt={aiPrompt}
-          onPromptChange={setAiPrompt}
-          onSubmit={handleAIPromptSubmit}
           loading={loading}
           onCancel={() => setEditMode("none")}
-        />
-      )}
-
-      {editMode !== "none" && draft !== sentence?.sentence && (
-        <EditActions
-          onAccept={handleAccept}
-          onReject={() => {
-            setDraft(sentence?.sentence || "");
-            setEditMode("none");
-          }}
         />
       )}
     </div>

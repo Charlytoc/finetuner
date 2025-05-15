@@ -10,10 +10,12 @@ type Props = {
     brief,
     hash,
     status,
+    warning,
   }: {
     brief: string;
     hash: string;
     status: string;
+    warning: string;
   }) => void;
 };
 
@@ -61,12 +63,12 @@ export const FileUploader: React.FC<Props> = ({ onUploadSuccess }) => {
       setIsOpen(false);
       setIsLoading(false);
       toast.success("Resumen generado con éxito", { id: tid });
-      console.log(resumen.hash, "resumen");
       if (onUploadSuccess)
         onUploadSuccess({
           brief: resumen.brief,
           hash: resumen.hash,
           status: resumen.status,
+          warning: resumen.warning,
         });
     } catch (error) {
       console.error("Error al enviar datos:", error);
