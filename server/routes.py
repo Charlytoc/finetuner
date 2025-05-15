@@ -3,7 +3,6 @@ import os
 from typing import List
 import uuid
 from datetime import datetime
-from typing import List
 
 import httpx
 from fastapi import Request
