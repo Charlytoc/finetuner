@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime
 
 import httpx
+from httpx import Timeout
 from fastapi import Request
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
