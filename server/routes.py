@@ -1,5 +1,5 @@
 import os
-
+from fastapi import Response
 from typing import List
 import uuid
 from datetime import datetime
@@ -14,7 +14,7 @@ from server.utils.auth import get_access_token
 from server.db.models import TrainObjective, Completion, TrainingJob, User
 from server.db.core import get_db
 from server.utils.schemas import (
-    UserCreate,
+    # UserCreate,
     UserRead,
     TrainObjectiveCreate,
     TrainObjectiveRead,
@@ -38,25 +38,25 @@ def make_slug(name: str) -> str:
     return f"{base}-{uuid.uuid4().hex[:6]}"
 
 
-@router.post("/signup", response_model=UserRead, summary="Crear un nuevo usuario")
-def signup(data: UserCreate, db: Session = Depends(get_db)):
-    existing = (
-        db.query(User)
-        .filter((User.username == data.username) | (User.email == data.email))
-        .first()
-    )
-    if existing:
-        raise HTTPException(status_code=400, detail="Usuario o correo ya registrado")
+# @router.post("/signup", response_model=UserRead, summary="Crear un nuevo usuario")
+# def signup(data: UserCreate, db: Session = Depends(get_db)):
+#     existing = (
+#         db.query(User)
+#         .filter((User.username == data.username) | (User.email == data.email))
+#         .first()
+#     )
+#     if existing:
+#         raise HTTPException(status_code=400, detail="Usuario o correo ya registrado")
 
-    user = User(
-        username=data.username,
-        email=data.email,
-        password_hash=get_password_hash(data.password),  # 🔐 aquí el hash
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+#     user = User(
+#         username=data.username,
+#         email=data.email,
+#         password_hash=get_password_hash(data.password),  # 🔐 aquí el hash
+#     )
+#     db.add(user)
+#     db.commit()
+#     db.refresh(user)
+#     return user
 
 
 @router.post("/login", response_model=UserRead, summary="Login clásico sin JWT")
@@ -262,9 +262,12 @@ async def proxy_request_changes(hash: str, request: Request):
             json=body,
             headers={"Authorization": f"Bearer {access_token}"},
         )
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json()
+
+    return Response(
+        content=response.content,
+        status_code=response.status_code,
+        media_type=response.headers.get("content-type", "application/json"),
+    )
 
 
 @router.post("/generate-sentence-brief")
@@ -292,7 +295,8 @@ async def generate_sentence_brief_proxy(request: Request):
             headers=headers,
         )
 
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-
-    return response.json()
+    return Response(
+        content=response.content,
+        status_code=response.status_code,
+        media_type=response.headers.get("content-type", "application/json"),
+    )

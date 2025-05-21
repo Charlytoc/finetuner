@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useStore } from "../modules/store";
+import { useStore, type APIStatus } from "../modules/store";
 import { updateSentence } from "../modules/lib";
 import { Markdowner } from "./Markdowner";
 import { InstructionsModal } from "./Instructions";
 import { FileUploader } from "./FileUploader";
 import { AIPromptEditor } from "./AIPromptEditor";
 import type { EditMode } from "./types";
+import toast from "react-hot-toast";
+import { WaitForSentence } from "./WaitForSentence";
 
 export const SentenceEditor = () => {
   const sentence = useStore((state) => state.sentence);
@@ -45,13 +47,39 @@ export const SentenceEditor = () => {
     status: string;
     warning: string;
   }) => {
-    setSentence({
+    console.log(
+      "status RECIBID",
+      status,
+      "hash",
       hash,
-      sentence: brief,
-      status: status as "SUCCESS" | "ERROR",
-    });
-    setWarning(warning);
-    setEditMode("none");
+      "brief",
+      brief,
+      "warning",
+      warning
+    );
+    if (status === "QUEUED") {
+      setSentence({
+        hash,
+        sentence: "",
+        status: status as APIStatus,
+      });
+      return;
+    }
+    if (status === "ERROR") {
+      toast.error("Error al generar la sentencia, por favor intenta de nuevo.");
+      return;
+    }
+
+    if (status === "SUCCESS") {
+      toast.success("Resumen generado con éxito");
+      setSentence({
+        hash,
+        sentence: brief,
+        status: status as APIStatus,
+      });
+      setWarning(warning);
+      setEditMode("none");
+    }
   };
 
   return (
@@ -61,7 +89,15 @@ export const SentenceEditor = () => {
         <FileUploader onUploadSuccess={handleUploadSuccess} />
       </div>
 
-      {sentence && editMode !== "ai" && (
+      {sentence && sentence.status === "QUEUED" && (
+        <WaitForSentence
+          hash={sentence.hash}
+          onSuccess={handleUploadSuccess}
+          pollingInterval={15000}
+        />
+      )}
+
+      {sentence && editMode !== "ai" && sentence.status === "SUCCESS" && (
         <div className="flex flex-col items-center gap-4 mt-10 bg-gray-200 p-4 rounded-md w-full">
           <Markdowner
             markdown={sentence?.sentence || ""}
@@ -75,7 +111,7 @@ export const SentenceEditor = () => {
         </div>
       )}
 
-      {editMode === "none" && sentence && sentence?.status !== "ERROR" && (
+      {editMode === "none" && sentence && sentence?.status === "SUCCESS" && (
         <div className="flex flex-col items-center gap-4 mt-4">
           <h2 className="text-md mt-4">
             ¿Qué quieres cambiar de esta sentencia?
@@ -93,7 +129,6 @@ export const SentenceEditor = () => {
 
       {editMode === "ai" && (
         <AIPromptEditor
-          loading={loading}
           onCancel={() => setEditMode("none")}
         />
       )}

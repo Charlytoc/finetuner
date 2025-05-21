@@ -8,11 +8,12 @@ type User = {
   email: string;
   token: string;
 };
+export type APIStatus = "ERROR" | "SUCCESS" | "QUEUED";
 
 type Sentence = {
   hash: string;
   sentence: string;
-  status: "ERROR" | "SUCCESS";
+  status: APIStatus;
 };
 
 type StoreState = {

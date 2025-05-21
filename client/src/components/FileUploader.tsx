@@ -60,9 +60,16 @@ export const FileUploader: React.FC<Props> = ({ onUploadSuccess }) => {
         })
       );
       const resumen = await generateSentenceBrief(formData);
+      toast.success(
+        "La sentencia está en cola, por favor espere a que se genere.",
+        {
+          id: tid,
+        }
+      );
+
       setIsOpen(false);
       setIsLoading(false);
-      toast.success("Resumen generado con éxito", { id: tid });
+
       if (onUploadSuccess)
         onUploadSuccess({
           brief: resumen.brief,
