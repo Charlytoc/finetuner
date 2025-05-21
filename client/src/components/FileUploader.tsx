@@ -6,6 +6,7 @@ import { Modal } from "./Modal";
 import { FileInput } from "./FileInput";
 
 type Props = {
+  disabled?: boolean;
   onUploadSuccess?: ({
     brief,
     hash,
@@ -25,7 +26,10 @@ export type HashedFile = {
   hash: string;
 };
 
-export const FileUploader: React.FC<Props> = ({ onUploadSuccess }) => {
+export const FileUploader: React.FC<Props> = ({
+  onUploadSuccess,
+  disabled = false,
+}) => {
   // const clientId = useStore((state) => state.clientId);
   const [isOpen, setIsOpen] = useState(false);
   const [images, setImages] = useState<FileList | null>(null);
@@ -87,9 +91,10 @@ export const FileUploader: React.FC<Props> = ({ onUploadSuccess }) => {
   return (
     <>
       <button
+        disabled={disabled}
         title="Subir archivos"
         onClick={() => setIsOpen(true)}
-        className="button-pj px-2 py-1 rounded-md"
+        className="button-pj px-2 py-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Subir nuevos archivos
       </button>
