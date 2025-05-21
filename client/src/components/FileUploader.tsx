@@ -94,7 +94,7 @@ export const FileUploader: React.FC<Props> = ({
         disabled={disabled}
         title="Subir archivos"
         onClick={() => setIsOpen(true)}
-        className="button-pj px-2 py-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+        className="button-pj px-2 py-1 rounded-md "
       >
         Subir nuevos archivos
       </button>

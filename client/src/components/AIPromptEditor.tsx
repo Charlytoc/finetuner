@@ -9,9 +9,10 @@ import { useSentencePolling } from "../hooks/useSentencePolling";
 
 type Props = {
   onCancel: () => void;
+  setIsEditing: (isEditing: boolean) => void;
 };
 
-export const AIPromptEditor = ({ onCancel }: Props) => {
+export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
   const sentence = useStore((state) => state.sentence);
   const setSentence = useStore((state) => state.setSentence);
   const [prompt, setPrompt] = useState("");
@@ -37,6 +38,8 @@ export const AIPromptEditor = ({ onCancel }: Props) => {
     }
     try {
       setLoading(true);
+      setIsEditing(true);
+
       const changes = await requestChanges(sentence?.hash || "", prompt);
       console.log("changes RECIBIDOS", changes);
       setPrompt("");
@@ -44,6 +47,7 @@ export const AIPromptEditor = ({ onCancel }: Props) => {
       console.error(err);
       toast.error("Hubo un error al actualizar la sentencia");
       setLoading(false);
+      setIsEditing(false);
     }
   };
 

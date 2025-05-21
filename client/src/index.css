@@ -105,3 +105,8 @@ h1 {
   border-radius: 5px;
   cursor: pointer;
 }
+.button-pj:disabled {
+  background-color: #cb0000;
+  opacity: 0.5;
+  cursor: not-allowed;
+}

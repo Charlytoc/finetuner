@@ -15,6 +15,8 @@ export const SentenceEditor = () => {
   const setWarning = useStore((s) => s.setWarning);
   const warning = useStore((s) => s.warning);
 
+  const [isEditing, setIsEditing] = useState(false);
+
   const [editMode, setEditMode] = useState<EditMode>("none");
 
   const handleSaveManual = async (newSentence: string) => {
@@ -83,7 +85,7 @@ export const SentenceEditor = () => {
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-100 p-4 rounded-md w-fit sm:justify-center">
         <InstructionsModal />
         <FileUploader
-          disabled={sentence?.status === "QUEUED"}
+          disabled={sentence?.status === "QUEUED" || isEditing}
           onUploadSuccess={handleUploadSuccess}
         />
       </div>
@@ -127,7 +129,13 @@ export const SentenceEditor = () => {
       )}
 
       {editMode === "ai" && (
-        <AIPromptEditor onCancel={() => setEditMode("none")} />
+        <AIPromptEditor
+          onCancel={() => {
+            setEditMode("none");
+            setIsEditing(false);
+          }}
+          setIsEditing={setIsEditing}
+        />
       )}
     </div>
   );
