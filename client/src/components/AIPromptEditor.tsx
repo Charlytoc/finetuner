@@ -112,7 +112,16 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
                 {!loading && (
                   <SuperButton
                     className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
-                    onClick={onCancel}
+                    onClick={async () => {
+                      if (sentence?.hash && sentence?.sentence) {
+                        await updateSentence(
+                          sentence?.hash,
+                          sentence?.sentence
+                        );
+                      }
+                      onCancel();
+                      setPrompt("");
+                    }}
                   >
                     Cancelar
                   </SuperButton>

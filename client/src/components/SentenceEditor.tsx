@@ -131,6 +131,7 @@ export const SentenceEditor = () => {
       {editMode === "ai" && (
         <AIPromptEditor
           onCancel={() => {
+            // await updateSentence(sentence?.hash || "", draft);
             setEditMode("none");
             setIsEditing(false);
           }}
