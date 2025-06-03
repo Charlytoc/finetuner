@@ -84,6 +84,7 @@ export const SentenceEditor = () => {
     console.error(error, "Error al generar la sentencia");
     toast.error(
       "Hubo un error al generar la sentencia, por favor intenta de nuevo."
+      
     );
     setSentence({
       hash: sentence?.hash || "",

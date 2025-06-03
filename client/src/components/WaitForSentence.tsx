@@ -22,8 +22,8 @@ export const WaitForSentence: React.FC<WaitForSentenceProps> = ({
   hash,
   onSuccess,
   onError,
-  pollingInterval = 15000,
-  maxRetries = 20,
+  pollingInterval = 30000,
+  maxRetries = 30,
 }) => {
   const retries = useRef(0);
 
