@@ -1,7 +1,8 @@
 import axios from "axios";
+const DEV_MODE = true;
 
 export const api = axios.create({
-  baseURL: "/api/v1",
+  baseURL: DEV_MODE ? "http://localhost:8005/api/v1" : "/api/v1",
 });
 
 export const loginRequest = async (username: string, password: string) => {

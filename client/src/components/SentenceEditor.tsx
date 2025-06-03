@@ -80,6 +80,18 @@ export const SentenceEditor = () => {
     }
   };
 
+  const handleUploadError = (error: any) => {
+    console.error(error, "Error al generar la sentencia");
+    toast.error(
+      "Hubo un error al generar la sentencia, por favor intenta de nuevo."
+    );
+    setSentence({
+      hash: sentence?.hash || "",
+      sentence: "",
+      status: "ERROR",
+    });
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-auto flex flex-col items-center mb-20">
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-100 p-4 rounded-md w-fit sm:justify-center">
@@ -95,6 +107,7 @@ export const SentenceEditor = () => {
           hash={sentence.hash}
           onSuccess={handleUploadSuccess}
           pollingInterval={15000}
+          onError={handleUploadError}
         />
       )}
 
