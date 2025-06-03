@@ -1,5 +1,5 @@
 import axios from "axios";
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 export const api = axios.create({
   baseURL: DEV_MODE ? "http://localhost:8005/api/v1" : "/api/v1",
