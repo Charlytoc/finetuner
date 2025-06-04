@@ -48,8 +48,13 @@ export const WaitForSentence: React.FC<WaitForSentenceProps> = ({
           clearInterval(intervalId);
         }
       } catch (error: any) {
+        console.log(
+          "error mientras se espera a que se genere la sentencia",
+          error
+        );
         if (error?.response?.status === 404) {
           // Sentencia aún no está lista
+          console.log("Sentencia aún no está lista");
         } else {
           clearInterval(intervalId);
           if (isMounted) {

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from server.utils.helpers import get_user_id
 from server.utils.auth import get_access_token
+from server.utils.csv_logger import CSVLogger
 from server.db.models import TrainObjective, Completion, TrainingJob, User
 from server.db.core import get_db
 from server.utils.schemas import (
@@ -25,8 +26,10 @@ from server.utils.schemas import (
     UserLogin,
 )
 
+
 router = APIRouter(prefix="/api/v1")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+csv_logger = CSVLogger()
 
 
 def get_password_hash(password: str) -> str:
@@ -65,6 +68,13 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == data.username).first()
     if not user or not pwd_context.verify(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
+    csv_logger.log(
+        endpoint="POST /api/login",
+        http_status=200,
+        hash_=user.id,
+        message="Login exitoso",
+        exit_status=0,
+    )
     return user
 
 
@@ -226,14 +236,29 @@ print("Servidor de Sentencias API apuntando a: ", SENTENCIAS_API_URL)
 
 @router.get("/sentencia/{hash}", summary="Obtener una sentencia ciudadana")
 async def proxy_get_sentence(hash: str):
-    access_token = get_access_token()
+    # access_token = get_access_token()
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{SENTENCIAS_API_URL}/api/sentencia/{hash}",
-            headers={"Authorization": f"Bearer {access_token}"},
+            # headers={"Authorization": f"Bearer {access_token}"},
         )
     if response.status_code != 200:
+        csv_logger.log(
+            endpoint="GET /api/sentencia/{hash}",
+            http_status=response.status_code,
+            hash_=hash,
+            message=response.text,
+            exit_status=1,
+        )
         raise HTTPException(status_code=response.status_code, detail=response.text)
+
+    csv_logger.log(
+        endpoint="GET /api/sentencia/{hash}",
+        http_status=response.status_code,
+        hash_=hash,
+        message=response.text,
+        exit_status=0,
+    )
     return response.json()
 
 
@@ -258,14 +283,13 @@ async def proxy_update_sentence(hash: str, request: Request):
 )
 async def proxy_request_changes(hash: str, request: Request):
     body = await request.json()
-    access_token = get_access_token()
+
     async with httpx.AsyncClient(
         timeout=Timeout(MAX_TIMEOUT, read=MAX_TIMEOUT)
     ) as client:
         response = await client.post(
             f"{SENTENCIAS_API_URL}/api/sentencia/{hash}/request-changes",
             json=body,
-            headers={"Authorization": f"Bearer {access_token}"},
         )
 
     return Response(
@@ -277,7 +301,6 @@ async def proxy_request_changes(hash: str, request: Request):
 
 @router.post("/generate-sentence-brief")
 async def generate_sentence_brief_proxy(request: Request):
-    access_token = get_access_token()
 
     # Leer el body crudo
     body = await request.body()
@@ -289,7 +312,6 @@ async def generate_sentence_brief_proxy(request: Request):
         raise HTTPException(status_code=400, detail="Falta Content-Type")
 
     headers = {
-        "Authorization": f"Bearer {access_token}",
         "Content-Type": content_type,
     }
 
