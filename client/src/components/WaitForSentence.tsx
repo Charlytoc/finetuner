@@ -52,16 +52,10 @@ export const WaitForSentence: React.FC<WaitForSentenceProps> = ({
           "error mientras se espera a que se genere la sentencia",
           error
         );
-        if (error?.response?.status === 404) {
-          // Sentencia aún no está lista
-          console.log("Sentencia aún no está lista");
-        } else {
-          clearInterval(intervalId);
-          if (isMounted) {
-            onError?.(error);
-          }
-        }
+        // Siempre sigue reintentando, solo loguea el error
+        // Puedes agregar lógica adicional si quieres notificar ciertos errores, pero no detengas el polling
       }
+      
     }, pollingInterval);
 
     return () => {
