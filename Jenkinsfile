@@ -7,7 +7,7 @@ pipeline {
         DEPLOY_USER     = 'ocr'
         APP_DIR         = '/home/ocr/entrenador-sentencias-ia'
         SCREEN_SESSION  = 'entrenador-sentencias-ia'
-        GIT_SSH_URL     = 'git@git.pjedomex.gob.mx:PJEM/IA-entrenador-sentencias.git'
+        GIT_HTTP_URL     = 'https://git.pjedomex.gob.mx/PJEM/IA-entrenador-sentencias.git'
         GIT_CREDENTIALS = 'JENKINSGITEAUSERPASS'
     }
 
@@ -22,7 +22,7 @@ pipeline {
                     $class: 'GitSCM',
                     branches: [[name: "refs/heads/jenkis-impl"]],
                     userRemoteConfigs: [[
-                        url: env.GIT_SSH_URL,
+                        url: env.GIT_HTTP_URL,
                         credentialsId: env.SSH_CREDENTIALS
                     ]]
                 ])
