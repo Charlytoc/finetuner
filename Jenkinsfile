@@ -40,9 +40,15 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST_IP} '
                           set -e
-                          cd ${APP_DIR}
-                          git fetch --all
-                          git reset --hard origin/jenkis-impl
+
+                          # 1) Si no existe .git, clonamos
+                          if [ ! -d "${APP_DIR}/.git" ]; then
+                            git clone --branch jenkis-impl ${GIT_HTTP_URL} ${APP_DIR}
+                          else
+                            cd ${APP_DIR}
+                            git fetch --all
+                            git reset --hard origin/jenkis-impl
+                          fi
                         '
                     """
 
