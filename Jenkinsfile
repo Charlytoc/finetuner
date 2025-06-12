@@ -54,7 +54,7 @@ pipeline {
                                     git clone --branch jenkis-impl \$GIT_URL "${APP_DIR}"
                                 else
                                     cd ${APP_DIR}
-                                    git remote set-url origin "$GIT_URL"
+                                    git remote set-url origin \$GIT_URL
                                     git fetch --all
                                     git reset --hard origin/jenkis-impl
                                 fi
