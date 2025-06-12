@@ -5,9 +5,10 @@ pipeline {
         DEPLOY_HOST     = 'https://entrenadorsentencias.pjedomex.gob.mx'
         DEPLOY_HOST_IP  = '10.22.245.5'
         DEPLOY_USER     = 'ocr'
-        APP_DIR         = '/home/ocr/entrenador-sentencias-ia/'
+        APP_DIR         = '/home/ocr/entrenador-sentencias-ia'
         SCREEN_SESSION  = 'entrenador-sentencias-ia'
-        GIT_HTTP_URL     = 'https://git.pjedomex.gob.mx/PJEM/IA-entrenador-sentencias.git'
+        GIT_HTTP_URL    = 'https://git.pjedomex.gob.mx/PJEM/IA-entrenador-sentencias.git'
+        GIT_BASE_URL    = 'git.pjedomex.gob.mx/PJEM/IA-entrenador-sentencias.git'
         GIT_CREDENTIALS = 'JENKINSGITEAUSERPASS'
     }
 
@@ -46,11 +47,14 @@ pipeline {
                             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST_IP} '
                             set -e
 
+                            GIT_URL = "https://${GITEA_USER}:${GITEA_PASS}@${GIT_BASE_URL}"
+
                             # 1) Si no existe .git, clonamos
                             if [ ! -d "${APP_DIR}/.git" ]; then
-                                git clone --branch jenkis-impl ${GIT_HTTP_URL} ${APP_DIR}
+                                git clone --branch jenkis-impl ${GIT_URL} ${APP_DIR}
                             else
                                 cd ${APP_DIR}
+                                git remote set-url origin "$GIT_URL"
                                 git fetch --all
                                 git reset --hard origin/jenkis-impl
                             fi
