@@ -34,38 +34,42 @@ pipeline {
             }
             steps {
                 echo "Iniciando despliegue rama ${env.BRANCH_NAME} en ${DEPLOY_HOST_IP}"
-                sshagent([env.SSH_CREDENTIALS]) {
-                    echo "Desplegando en ${DEPLOY_HOST_IP} como ${DEPLOY_USER} en ${APP_DIR}"
-                    // 1. Actualizar código git de la rama jenkis-impl
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST_IP} '
-                          set -e
+                withCredentials([usernamePassword(
+                    credentialsId: env.GIT_CREDENTIALS
+                )]) {
+                    sshagent([env.SSH_CREDENTIALS]) {
+                        echo "Desplegando en ${DEPLOY_HOST_IP} como ${DEPLOY_USER} en ${APP_DIR}"
+                        // 1. Actualizar código git de la rama jenkis-impl
+                        sh """
+                            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST_IP} '
+                            set -e
 
-                          # 1) Si no existe .git, clonamos
-                          if [ ! -d "${APP_DIR}/.git" ]; then
-                            git clone --branch jenkis-impl ${GIT_HTTP_URL} ${APP_DIR}
-                          else
-                            cd ${APP_DIR}
-                            git fetch --all
-                            git reset --hard origin/jenkis-impl
-                          fi
-                        '
-                    """
+                            # 1) Si no existe .git, clonamos
+                            if [ ! -d "${APP_DIR}/.git" ]; then
+                                git clone --branch jenkis-impl ${GIT_HTTP_URL} ${APP_DIR}
+                            else
+                                cd ${APP_DIR}
+                                git fetch --all
+                                git reset --hard origin/jenkis-impl
+                            fi
+                            '
+                        """
 
-                    // // 3. Detener la screen anterior si existe
-                    // sh """
-                    //     ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
-                    //         screen -S ${SCREEN_SESSION} -X quit || true
-                    //     '
-                    // """
+                        // // 3. Detener la screen anterior si existe
+                        // sh """
+                        //     ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
+                        //         screen -S ${SCREEN_SESSION} -X quit || true
+                        //     '
+                        // """
 
-                    // // 4. Iniciar nueva sesión screen y lanzar start.sh
-                    // sh """
-                    //     ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
-                    //         cd ${APP_DIR} &&
-                    //         screen -dmS ${SCREEN_SESSION} ./start.sh -m prod
-                    //     '
-                    // """
+                        // // 4. Iniciar nueva sesión screen y lanzar start.sh
+                        // sh """
+                        //     ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
+                        //         cd ${APP_DIR} &&
+                        //         screen -dmS ${SCREEN_SESSION} ./start.sh -m prod
+                        //     '
+                        // """
+                    }
                 }
             }
         }
