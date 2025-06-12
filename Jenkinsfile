@@ -51,7 +51,7 @@ pipeline {
 
                             # 1) Si no existe .git, clonamos
                             if [ ! -d "${APP_DIR}/.git" ]; then
-                                git clone --branch jenkis-impl ${GIT_URL} ${APP_DIR}
+                                git clone --branch jenkis-impl "$GIT_URL" "${APP_DIR}"
                             else
                                 cd ${APP_DIR}
                                 git remote set-url origin "$GIT_URL"
