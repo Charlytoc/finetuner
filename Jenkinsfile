@@ -37,7 +37,14 @@ pipeline {
                 sshagent([env.SSH_CREDENTIALS]) {
                     echo "Desplegando en ${DEPLOY_HOST_IP} como ${DEPLOY_USER} en ${APP_DIR}"
                     // 1. Actualizar código git de la rama jenkis-impl
-                    sh "cd ${APP_DIR} && git fetch --all && git reset --hard origin/jenkis-impl"
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST_IP} '
+                          set -e
+                          cd ${APP_DIR}
+                          git fetch --all
+                          git reset --hard origin/${DEPLOY_BRANCH}
+                        '
+                    """
 
                     // // 3. Detener la screen anterior si existe
                     // sh """
