@@ -23,7 +23,7 @@ pipeline {
                     branches: [[name: "refs/heads/jenkis-impl"]],
                     userRemoteConfigs: [[
                         url: env.GIT_HTTP_URL,
-                        credentialsId: env.SSH_CREDENTIALS
+                        credentialsId: env.GIT_CREDENTIALS
                     ]]
                 ])
             }
