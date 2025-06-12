@@ -7,7 +7,7 @@ pipeline {
         DEPLOY_USER     = 'ocr'
         APP_DIR         = '/home/ocr/entrenador-sentencias-ia'
         SCREEN_SESSION  = 'entrenador-sentencias-ia'
-        GIT_SSH_URL     = 'git@gitea.pjedomex.gob.mx:PJEM/IA-entrenador-sentencias.git'
+        GIT_SSH_URL     = 'git@git.pjedomex.gob.mx:PJEM/IA-entrenador-sentencias.git'
         GIT_CREDENTIALS = 'JENKINSGITEAUSERPASS'
     }
 
