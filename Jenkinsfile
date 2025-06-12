@@ -15,13 +15,13 @@ pipeline {
     stages {
         stage('Checkout') {
             when{
-                branch 'jenkis-impl'
+                branch 'master'
             }
             steps {
-                // Checkout de la rama jenkis-impl desde Gitea
+                // Checkout de la rama master desde Gitea
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: "refs/heads/jenkis-impl"]],
+                    branches: [[name: "refs/heads/master"]],
                     userRemoteConfigs: [[
                         url: env.GIT_HTTP_URL,
                         credentialsId: env.GIT_CREDENTIALS
@@ -31,7 +31,7 @@ pipeline {
         }
         stage('Deploy') {
             when{
-                branch 'jenkis-impl'
+                branch 'master'
             }
             steps {
                 echo "Iniciando despliegue rama ${env.BRANCH_NAME} en ${DEPLOY_HOST_IP}"
@@ -42,7 +42,7 @@ pipeline {
                 )]) {
                     sshagent([env.SSH_CREDENTIALS]) {
                         echo "Desplegando en ${DEPLOY_HOST_IP} como ${DEPLOY_USER} en ${APP_DIR}"
-                        // 1. Actualizar código git de la rama jenkis-impl
+                        // 1. Actualizar código git de la rama master
                         sh """
                             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST_IP} '
                                 set -e
@@ -51,12 +51,12 @@ pipeline {
 
                                 # 1) Si no existe .git, clonamos
                                 if [ ! -d "${APP_DIR}/.git" ]; then
-                                    git clone --branch jenkis-impl \$GIT_URL "${APP_DIR}"
+                                    git clone --branch master \$GIT_URL "${APP_DIR}"
                                 else
                                     cd ${APP_DIR}
                                     git remote set-url origin \$GIT_URL
                                     git fetch --all
-                                    git reset --hard origin/jenkis-impl
+                                    git reset --hard origin/master
                                 fi
 
                                 # 2) Generar archivo .env a partir de .env.produccion
