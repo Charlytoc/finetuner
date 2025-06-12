@@ -5,7 +5,7 @@ pipeline {
         DEPLOY_HOST     = 'https://entrenadorsentencias.pjedomex.gob.mx'
         DEPLOY_HOST_IP  = '10.22.245.5'
         DEPLOY_USER     = 'ocr'
-        APP_DIR         = '/home/ocr/entrenador-sentencias-ia'
+        APP_DIR         = '/home/ocr/entrenador-sentencias-ia/'
         SCREEN_SESSION  = 'entrenador-sentencias-ia'
         GIT_HTTP_URL     = 'https://git.pjedomex.gob.mx/PJEM/IA-entrenador-sentencias.git'
         GIT_CREDENTIALS = 'JENKINSGITEAUSERPASS'
