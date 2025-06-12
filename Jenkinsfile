@@ -35,7 +35,9 @@ pipeline {
             steps {
                 echo "Iniciando despliegue rama ${env.BRANCH_NAME} en ${DEPLOY_HOST_IP}"
                 withCredentials([usernamePassword(
-                    credentialsId: env.GIT_CREDENTIALS
+                    credentialsId: env.GIT_CREDENTIALS,
+                    usernameVariable: 'GITEA_USER',
+                    passwordVariable: 'GITEA_PASS'
                 )]) {
                     sshagent([env.SSH_CREDENTIALS]) {
                         echo "Desplegando en ${DEPLOY_HOST_IP} como ${DEPLOY_USER} en ${APP_DIR}"
