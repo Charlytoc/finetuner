@@ -47,7 +47,7 @@ pipeline {
                             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST_IP} '
                             set -e
 
-                            GIT_URL = "https://${GITEA_USER}:${GITEA_PASS}@${GIT_BASE_URL}"
+                            GIT_URL="https://${GITEA_USER}:${GITEA_PASS}@${GIT_BASE_URL}"
 
                             # 1) Si no existe .git, clonamos
                             if [ ! -d "${APP_DIR}/.git" ]; then
