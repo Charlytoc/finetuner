@@ -12,10 +12,10 @@ pipeline {
     }
 
     stages {
-        when{
-            branch 'jenkins-impl'
-        }
         stage('Checkout') {
+            when{
+                branch 'jenkins-impl'
+            }
             steps {
                 // Checkout de la rama jenkins-impl desde Gitea
                 checkout([
