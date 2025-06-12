@@ -14,13 +14,13 @@ pipeline {
     stages {
         stage('Checkout') {
             when{
-                branch 'jenkins-impl'
+                branch 'jenkis-impl'
             }
             steps {
-                // Checkout de la rama jenkins-impl desde Gitea
+                // Checkout de la rama jenkis-impl desde Gitea
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: "refs/heads/jenkins-impl"]],
+                    branches: [[name: "refs/heads/jenkis-impl"]],
                     userRemoteConfigs: [[
                         url: env.GIT_SSH_URL,
                         credentialsId: env.SSH_CREDENTIALS
@@ -30,14 +30,14 @@ pipeline {
         }
         stage('Deploy') {
             when{
-                branch 'jenkins-impl'
+                branch 'jenkis-impl'
             }
             steps {
                 echo "Iniciando despliegue rama ${env.BRANCH_NAME} en ${DEPLOY_HOST_IP}"
                 sshagent([env.SSH_CREDENTIALS]) {
                     echo "Desplegando en ${DEPLOY_HOST_IP} como ${DEPLOY_USER} en ${APP_DIR}"
-                    // 1. Actualizar código git de la rama jenkins-impl
-                    sh "cd ${APP_DIR} && git fetch --all && git reset --hard origin/jenkins-impl"
+                    // 1. Actualizar código git de la rama jenkis-impl
+                    sh "cd ${APP_DIR} && git fetch --all && git reset --hard origin/jenkis-impl"
 
                     // // 3. Detener la screen anterior si existe
                     // sh """
