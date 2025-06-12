@@ -60,7 +60,7 @@ export const FileUploader: React.FC<Props> = ({
       formData.append(
         "extra_data",
         JSON.stringify({
-          use_cache: true,
+          use_cache: false,
         })
       );
       const resumen = await generateSentenceBrief(formData);
