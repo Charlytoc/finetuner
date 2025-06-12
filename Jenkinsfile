@@ -42,7 +42,7 @@ pipeline {
                           set -e
                           cd ${APP_DIR}
                           git fetch --all
-                          git reset --hard origin/${DEPLOY_BRANCH}
+                          git reset --hard origin/jenkis-impl
                         '
                     """
 
