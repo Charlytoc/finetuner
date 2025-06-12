@@ -62,23 +62,12 @@ pipeline {
                                 # 2) Generar archivo .env a partir de .env.produccion
                                 cd '${APP_DIR}'
                                 cp -f .env.produccion .env
+
+                                # 3) Reiniciar la aplicación
+                                screen -S ${SCREEN_SESSION} -X quit || true
+                                screen -dmS ${SCREEN_SESSION} ./start.sh -m prod
                             '
                         """
-
-                        // // 3. Detener la screen anterior si existe
-                        // sh """
-                        //     ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
-                        //         screen -S ${SCREEN_SESSION} -X quit || true
-                        //     '
-                        // """
-
-                        // // 4. Iniciar nueva sesión screen y lanzar start.sh
-                        // sh """
-                        //     ssh ${DEPLOY_USER}@${DEPLOY_HOST} '
-                        //         cd ${APP_DIR} &&
-                        //         screen -dmS ${SCREEN_SESSION} ./start.sh -m prod
-                        //     '
-                        // """
                     }
                 }
             }
