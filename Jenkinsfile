@@ -45,19 +45,23 @@ pipeline {
                         // 1. Actualizar código git de la rama jenkis-impl
                         sh """
                             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST_IP} '
-                            set -e
+                                set -e
 
-                            GIT_URL="https://${GITEA_USER}:${GITEA_PASS}@${GIT_BASE_URL}"
+                                GIT_URL="https://${GITEA_USER}:${GITEA_PASS}@${GIT_BASE_URL}"
 
-                            # 1) Si no existe .git, clonamos
-                            if [ ! -d "${APP_DIR}/.git" ]; then
-                                git clone --branch jenkis-impl \$GIT_URL "${APP_DIR}"
-                            else
-                                cd ${APP_DIR}
-                                git remote set-url origin "$GIT_URL"
-                                git fetch --all
-                                git reset --hard origin/jenkis-impl
-                            fi
+                                # 1) Si no existe .git, clonamos
+                                if [ ! -d "${APP_DIR}/.git" ]; then
+                                    git clone --branch jenkis-impl \$GIT_URL "${APP_DIR}"
+                                else
+                                    cd ${APP_DIR}
+                                    git remote set-url origin "$GIT_URL"
+                                    git fetch --all
+                                    git reset --hard origin/jenkis-impl
+                                fi
+
+                                # 2) Generar archivo .env a partir de .env.produccion
+                                cd '${APP_DIR}'
+                                cp -f .env.produccion .env
                             '
                         """
 
