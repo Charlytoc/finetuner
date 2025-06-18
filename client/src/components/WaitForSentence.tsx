@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getSentence } from "../modules/lib";
 import type { APIStatus } from "../modules/store";
 
@@ -26,18 +26,20 @@ export const WaitForSentence: React.FC<WaitForSentenceProps> = ({
   maxRetries = 30,
 }) => {
   const retries = useRef(0);
+  const [exceeded, setExceeded] = useState(false);
+  const [pollAttempt, setPollAttempt] = useState(0); // Para reiniciar el polling
 
   useEffect(() => {
     let isMounted = true;
+    retries.current = 0;
+    setExceeded(false);
+
     const intervalId = setInterval(async () => {
       retries.current++;
       if (retries.current > maxRetries) {
-        console.log("Se ha alcanzado el máximo número de reintentos.");
         clearInterval(intervalId);
         if (isMounted) {
-          onError?.(
-            new Error("Se ha alcanzado el máximo número de reintentos.")
-          );
+          setExceeded(true);
         }
         return;
       }
@@ -48,21 +50,50 @@ export const WaitForSentence: React.FC<WaitForSentenceProps> = ({
           clearInterval(intervalId);
         }
       } catch (error: any) {
+        // Sigue reintentando, solo loguea el error
         console.log(
           "error mientras se espera a que se genere la sentencia",
           error
         );
-        // Siempre sigue reintentando, solo loguea el error
-        // Puedes agregar lógica adicional si quieres notificar ciertos errores, pero no detengas el polling
       }
-      
     }, pollingInterval);
 
     return () => {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, [hash, pollingInterval, maxRetries, onSuccess, onError]);
+    // pollAttempt se incluye para reiniciar el efecto
+  }, [hash, pollingInterval, maxRetries, onSuccess, onError, pollAttempt]);
+
+  const handleRetry = () => {
+    setPollAttempt((prev) => prev + 1);
+  };
+
+  const handleCancel = () => {
+    onError?.("Cancelado por el usuario");
+  };
+
+  if (exceeded) {
+    return (
+      <div className="text-sm text-gray-600 flex flex-col items-center gap-2">
+        <div>⚠️ Se ha alcanzado el máximo número de reintentos.</div>
+        <div className="flex flex-row items-center gap-2">
+          <button
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded button-pj"
+            onClick={handleRetry}
+          >
+            Reintentar
+          </button>
+          <button
+            className="mt-2 px-4 py-2  text-white rounded bg-gray-500 cursor-pointer"
+            onClick={handleCancel}
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="text-sm text-gray-600 animate-pulse">

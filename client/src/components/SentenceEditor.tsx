@@ -107,7 +107,7 @@ export const SentenceEditor = () => {
         <WaitForSentence
           hash={sentence.hash}
           onSuccess={handleUploadSuccess}
-          pollingInterval={15000}
+          pollingInterval={20000}
           onError={handleUploadError}
         />
       )}
