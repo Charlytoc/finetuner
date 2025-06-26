@@ -1,5 +1,6 @@
 import os
 from fastapi import Response
+
 # from typing import List
 # import uuid
 # from datetime import datetime
@@ -10,6 +11,7 @@ from fastapi import Request
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+
 # from server.utils.auth import get_access_token
 from server.utils.csv_logger import CSVLogger
 from server.db.models import User
@@ -49,6 +51,7 @@ MAX_TIMEOUT = int(os.getenv("MAX_TIMEOUT", 540.0))
 
 print("Servidor de Sentencias API apuntando a: ", SENTENCIAS_API_URL)
 
+
 @router.get("/sentencia/{hash}", summary="Obtener una sentencia ciudadana")
 async def proxy_get_sentence(hash: str):
     try:
@@ -87,6 +90,7 @@ async def proxy_get_sentence(hash: str):
             exit_status=1,
         )
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.put("/sentencia/{hash}", summary="Actualizar una sentencia ciudadana")
 async def proxy_update_sentence(hash: str, request: Request):
@@ -128,6 +132,7 @@ async def proxy_update_sentence(hash: str, request: Request):
             exit_status=1,
         )
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post(
     "/sentencia/{hash}/request-changes",
@@ -186,6 +191,7 @@ async def proxy_request_changes(hash: str, request: Request):
 
 @router.post("/generate-sentence-brief")
 async def generate_sentence_brief_proxy(request: Request):
+    print("generate_sentence_brief_proxy request")
     try:
         body = await request.body()
         content_type = request.headers.get("content-type")
@@ -206,8 +212,10 @@ async def generate_sentence_brief_proxy(request: Request):
         async with httpx.AsyncClient(
             timeout=Timeout(MAX_TIMEOUT, read=MAX_TIMEOUT)
         ) as client:
+            sentencias_url = f"{SENTENCIAS_API_URL}/api/generate-sentence-brief"
+            print("sentencias_url to redirect: ", sentencias_url)
             response = await client.post(
-                f"{SENTENCIAS_API_URL}/api/generate-sentence-brief",
+                sentencias_url,
                 content=body,
                 headers=headers,
             )
