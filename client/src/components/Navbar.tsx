@@ -1,6 +1,6 @@
 import Login from "./Login";
 import { useStore } from "../modules/store";
-const NAME = "Entrenador PJEdoMex";
+const NAME = "Entrenador PJEdoMex-IA";
 
 export const Navbar = () => {
   const user = useStore((state) => state.user);
