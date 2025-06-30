@@ -40,8 +40,12 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
       setLoading(true);
       setIsEditing(true);
 
-      const changes = await requestChanges(sentence?.hash || "", prompt);
-      console.log("changes RECIBIDOS", changes);
+      const changes = await requestChanges(
+        sentence?.hash || "",
+        prompt,
+        sentence?.sentence || ""
+      );
+      console.log("changes response", changes);
       setPrompt("");
     } catch (err) {
       console.error(err);
@@ -54,7 +58,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
   const handleAccept = async () => {
     if (!draft.trim()) return;
     try {
-      await updateSentence(sentence?.hash || "", draft);
+      // await updateSentence(sentence?.hash || "", draft);
       setSentence({
         hash: sentence?.hash || "",
         sentence: draft,
