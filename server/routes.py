@@ -141,6 +141,7 @@ async def proxy_update_sentence(hash: str, request: Request):
 async def proxy_request_changes(hash: str, request: Request):
     try:
         body = await request.json()
+        print("body request-changes: ", body)
         async with httpx.AsyncClient(
             timeout=Timeout(MAX_TIMEOUT, read=MAX_TIMEOUT)
         ) as client:
@@ -161,7 +162,7 @@ async def proxy_request_changes(hash: str, request: Request):
                 endpoint="POST /api/sentencia/{hash}/request-changes",
                 http_status=response.status_code,
                 hash_=hash,
-                message=response.text,
+                message=response.text + " " + "BODY: " + str(body),
                 exit_status=1,
             )
         return Response(
