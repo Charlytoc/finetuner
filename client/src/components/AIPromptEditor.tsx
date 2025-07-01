@@ -32,7 +32,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
   const handleFinish = (value: string) => {
     if (value === sentence?.sentence) {
       setError(
-        "Ha habido un error al actualizar la sentencia, por favor intenta nuevamente, asegúrate de incluir indicaciones claras y específicas para que la IA pueda entender lo que quieres cambiar, de lo contrario, no será posible actualizar la sentencia."
+        "Ha habido un error al actualizar la sentencia, por favor intenta nuevamente, asegúrate de incluir indicaciones claras y específicas para que la IA pueda entender lo que quieres cambiar. Si tu solicitud no es clara o no tiene nada que ver con la sentencia, no será posible actualizar la sentencia."
       );
     } else {
       setDraft(value);
