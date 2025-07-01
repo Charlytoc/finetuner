@@ -83,5 +83,13 @@ echo "Instalando requirements.txt…"
 # ----------------------------------------
 # 4) Arrancamos la app
 # ----------------------------------------
-echo "Iniciando app con $VENV_PYTHON main.py …"
-"$VENV_PYTHON" main.py
+APP_MODULE="main:app"
+PORT="${PORT:-8000}"
+
+if [[ "$MODE" == "prod" ]]; then
+  echo "Iniciando app con Gunicorn (modo producción)…"
+  "$VENV_PYTHON" -m gunicorn "$APP_MODULE" -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --workers 4
+else
+  echo "Iniciando app con Uvicorn (modo desarrollo)…"
+  "$VENV_PYTHON" -m uvicorn "$APP_MODULE" --host 0.0.0.0 --port $PORT --reload
+fi
