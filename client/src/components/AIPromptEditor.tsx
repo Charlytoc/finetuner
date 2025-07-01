@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SuperButton } from "./SuperButton";
 import toast from "react-hot-toast";
-import { requestChanges, sendFeedback, updateSentence } from "../modules/lib";
+import { requestChanges, sendFeedback } from "../modules/lib";
 import { useStore } from "../modules/store";
 import { EditActions } from "./EditActions";
 import { Markdowner } from "./Markdowner";
@@ -30,7 +30,13 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
   const [draft, setDraft] = useState(sentence?.sentence || "");
 
   const handleFinish = (value: string) => {
-    setDraft(value);
+    if (value === sentence?.sentence) {
+      setError(
+        "Ha habido un error al actualizar la sentencia, por favor intenta nuevamente, asegúrate de incluir indicaciones claras y específicas para que la IA pueda entender lo que quieres cambiar, de lo contrario, no será posible actualizar la sentencia."
+      );
+    } else {
+      setDraft(value);
+    }
     setLoading(false);
   };
 

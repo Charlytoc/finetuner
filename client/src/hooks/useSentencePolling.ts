@@ -21,10 +21,10 @@ export const useSentencePolling = (
     const poll = async () => {
       try {
         const data = await getSentence(hash);
-        if (data?.brief && data.brief !== current) {
+        if (data?.brief) {
+          console.log("✅ Draft actualizado automáticamente por polling");
           onFinish(data.brief);
           clearInterval(pollRef.current!);
-          console.log("✅ Draft actualizado automáticamente por polling");
         } else {
           retries.current += 1;
           if (retries.current >= maxRetries) {
