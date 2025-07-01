@@ -2,21 +2,45 @@
 set -e
 
 # ----------------------------------------
-# 1) Parseo de flags (-m prod|dev)
+# 1) Parseo de flags (-m prod|dev, -p puerto)
 # ----------------------------------------
 MODE=""
-while getopts ":m:" opt; do
+PORT=""
+
+# Parseo de flags cortos con getopts
+while getopts ":m:p:" opt; do
   case ${opt} in
     m )
       MODE="${OPTARG,,}"
       ;;
+    p )
+      PORT="$OPTARG"
+      ;;
     \? )
-      echo "Uso: $0 [-m prod|dev]"
+      echo "Uso: $0 [-m prod|dev] [-p puerto]"
       exit 1
       ;;
   esac
 done
 shift $((OPTIND -1))
+
+# Parseo de flags largos manualmente (--port)
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --port)
+      if [[ -n "$2" && "$2" != -* ]]; then
+        PORT="$2"
+        shift 2
+      else
+        echo "❌ Se esperaba un valor para --port (ej: 8006)"
+        exit 1
+      fi
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 # Si no viene -m, lo preguntamos
 if [[ -z "$MODE" ]]; then
@@ -30,8 +54,15 @@ if [[ -z "$MODE" ]]; then
   done
 fi
 
+# Si no viene -p/--port, lo preguntamos
+if [[ -z "$PORT" ]]; then
+  read -p "¿En qué puerto quieres correr la app? [8006]: " PORT
+  PORT="${PORT:-8006}"
+fi
+
 export ENVIRONMENT="$MODE"
 echo "ENVIRONMENT='$ENVIRONMENT'"
+echo "PORT='$PORT'"
 
 # ----------------------------------------
 # 1.5) Verificar contenedor PostgreSQL
@@ -48,8 +79,6 @@ elif [[ "$PG_STATUS" != Up* ]]; then
 else
   echo "✅ El contenedor '$PG_CONTAINER' ya está corriendo."
 fi
-
-
 
 # ----------------------------------------
 # 2) Creamos venv si hace falta
@@ -84,9 +113,6 @@ echo "Instalando requirements.txt…"
 # 4) Arrancamos la app
 # ----------------------------------------
 APP_MODULE="main:app"
-# PORT="${PORT:-8006}"
-PORT=8006
-
 
 if [[ "$MODE" == "prod" ]]; then
   echo "Iniciando app con Gunicorn (modo producción)…"
