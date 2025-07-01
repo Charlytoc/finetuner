@@ -16,7 +16,7 @@ export const InstructionsModal = () => {
           <p>
             El objetivo de esta aplicación es mejorar la calidad de las
             sentencias ciudadanas generadas por el{" "}
-            <strong>Traductor de Sentencias Ciudadanas</strong> usando la
+            <strong>Intérprete de Sentencias</strong> usando la
             retroalimentación de los usuarios.
           </p>
 
