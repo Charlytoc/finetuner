@@ -136,7 +136,8 @@ export const SentenceEditor = () => {
       {editMode === "none" && sentence && sentence?.status === "SUCCESS" && (
         <div className="flex flex-col items-center gap-4 mt-4">
           <h2 className="text-md mt-4">
-            ¿Qué quieres cambiar de esta sentencia?
+            ¿Consideras que se debe cambiar algo de esta interpretación de
+            sentencia? Edítala manualmente o solicita los cambios a la IA.
           </h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="button-pj" onClick={() => setEditMode("manual")}>
