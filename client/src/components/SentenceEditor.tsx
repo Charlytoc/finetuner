@@ -99,7 +99,9 @@ export const SentenceEditor = () => {
           El objetivo de esta aplicación es mejorar la calidad de las
           interpretaciones generadas por el{" "}
           <strong>Intérprete de Sentencias</strong> usando la retroalimentación
-          de los usuarios.
+          de los usuarios. Puedes ver las instrucciones presionando el botón de
+          <strong>instrucciones</strong> abajo. Sube tus archivos presionando el
+          botón de <strong>subir archivos</strong>.
         </p>
       </div>
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-100 p-4 rounded-md w-fit sm:justify-center">
