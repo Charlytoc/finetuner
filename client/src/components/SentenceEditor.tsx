@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore, type APIStatus } from "../modules/store";
-import { updateSentence } from "../modules/lib";
+// import { updateSentence } from "../modules/lib";
 import { Markdowner } from "./Markdowner";
 import { InstructionsModal } from "./Instructions";
 import { FileUploader } from "./FileUploader";
@@ -27,7 +27,6 @@ export const SentenceEditor = () => {
         sentence: newSentence,
         status: "SUCCESS",
       });
-      await updateSentence(sentence?.hash || "", newSentence);
       setEditMode("none");
     } catch (err) {
       console.error(err);

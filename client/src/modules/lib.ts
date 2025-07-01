@@ -15,11 +15,6 @@ export const getSentence = async (hash: string) => {
   return response.data;
 };
 
-export const updateSentence = async (hash: string, sentence: string) => {
-  const response = await api.put(`/sentencia/${hash}`, { sentence });
-  return response.data;
-};
-
 export const requestChanges = async (
   hash: string,
   feedback: string,
