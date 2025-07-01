@@ -142,6 +142,22 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
           )}
           {(!draft || draft === sentence?.sentence) && (
             <div className="flex flex-col gap-2 items-center justify-center">
+              <div className="text-sm text-gray-500 bg-yellow-100 p-2 rounded-md w-full mt-4">
+                <p>
+                  La solicitud enviada debe de ser para mejorar la
+                  interpretación,{" "}
+                  <strong>
+                    la retroalimentación será usada para futuras
+                    interpretaciones
+                  </strong>
+                  . En el recuadro de texto, escribe una{" "}
+                  <strong>instrucción clara y específica</strong> para que la IA
+                  pueda entender lo que quieres cambiar del resultado anterior.
+                  Por ejemplo: "Coloca en negrita el nombre de los involucrados"
+                  o "En vez de juez, debe decir 'la persona juzgadora' cada vez
+                  que se mencione al juez".
+                </p>
+              </div>
               <textarea
                 className="w-full resize-none p-2 rounded-md border mt-4"
                 placeholder="Describe los cambios que quieres..."

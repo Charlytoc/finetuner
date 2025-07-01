@@ -93,6 +93,15 @@ export const SentenceEditor = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-auto flex flex-col items-center mb-20">
+      <div className="flex flex-col items-center gap-4 bg-gray-100 p-4 rounded-md w-fit sm:justify-center bg-yellow-100 text-center mt-4">
+        <p>Bienvenido al Entrenador de Sentencias del PJEdoMex</p>
+        <p>
+          El objetivo de esta aplicación es mejorar la calidad de las sentencias
+          ciudadanas generadas por el{" "}
+          <strong>Traductor de Sentencias Ciudadanas</strong> usando la
+          retroalimentación de los usuarios.
+        </p>
+      </div>
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-100 p-4 rounded-md w-fit sm:justify-center">
         <InstructionsModal />
         <FileUploader
