@@ -263,3 +263,47 @@ async def generate_sentence_brief_proxy(request: Request):
             exit_status=1,
         )
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/feedback", summary="Enviar feedback")
+async def feedback_proxy(request: Request):
+    try:
+        body = await request.json()
+        print("body feedback: ", body)
+        async with httpx.AsyncClient(
+            timeout=Timeout(MAX_TIMEOUT, read=MAX_TIMEOUT)
+        ) as client:
+            response = await client.post(
+                f"{SENTENCIAS_API_URL}/api/feedback",
+                json=body,
+            )
+        if response.status_code < 400:
+            csv_logger.log(
+                endpoint="POST /feedback",
+                http_status=response.status_code,
+                hash_="N/A",
+                message=response.text,
+                exit_status=0,
+            )
+        else:
+            csv_logger.log(
+                endpoint="POST /feedback",
+                http_status=response.status_code,
+                hash_="N/A",
+                message=response.text,
+                exit_status=1,
+            )
+        return Response(
+            content=response.content,
+            status_code=response.status_code,
+            media_type=response.headers.get("content-type", "application/json"),
+        )
+    except Exception as e:
+        csv_logger.log(
+            endpoint="POST /feedback",
+            http_status=500,
+            hash_="N/A",
+            message=str(e),
+            exit_status=1,
+        )
+        raise HTTPException(status_code=500, detail=str(e))

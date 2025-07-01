@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { getSentence } from "../modules/lib";
 
 export const useSentencePolling = (
@@ -6,31 +6,54 @@ export const useSentencePolling = (
   current: string,
   onFinish: (value: string) => void,
   loading: boolean,
-  interval: number = 15000
+  interval: number = 10000,
+  maxRetries: number = 50,
+  onError?: (reason?: any) => void
 ) => {
+  const retries = useRef(0);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     if (!hash || !loading) return;
 
-    const poll = setInterval(async () => {
-      console.log("Polling in process", hash);
+    retries.current = 0; // Reset on new polling session
+
+    const poll = async () => {
       try {
         const data = await getSentence(hash);
-        console.log("data recibida en polling", data);
         if (data?.brief && data.brief !== current) {
           onFinish(data.brief);
-
+          clearInterval(pollRef.current!);
           console.log("✅ Draft actualizado automáticamente por polling");
         } else {
-          console.log(
-            "No hay cambios en la sentencia. Son iguales?",
-            data?.brief === current
-          );
+          retries.current += 1;
+          if (retries.current >= maxRetries) {
+            clearInterval(pollRef.current!);
+            console.log("❌ Polling falló después de", maxRetries, "intentos");
+            if (onError) onError("Max retries reached");
+          } else {
+            console.log(
+              "No hay cambios en la sentencia. Son iguales?",
+              data?.brief === current
+            );
+          }
         }
       } catch (err) {
-        console.warn("Polling fallo:", err);
+        retries.current += 1;
+        if (retries.current >= maxRetries) {
+          clearInterval(pollRef.current!);
+          console.log("❌ Polling falló después de", maxRetries, "intentos");
+          if (onError) onError(err);
+        } else {
+          console.warn("Polling fallo:", err);
+        }
       }
-    }, interval);
+    };
 
-    return () => clearInterval(poll);
-  }, [hash, current, onFinish, interval, loading]);
+    pollRef.current = setInterval(poll, interval);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [hash, current, onFinish, interval, loading, maxRetries, onError]);
 };

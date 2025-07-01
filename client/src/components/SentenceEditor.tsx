@@ -106,7 +106,7 @@ export const SentenceEditor = () => {
         <WaitForSentence
           hash={sentence.hash}
           onSuccess={handleUploadSuccess}
-          pollingInterval={20000}
+          pollingInterval={10000}
           onError={handleUploadError}
         />
       )}
@@ -144,7 +144,6 @@ export const SentenceEditor = () => {
       {editMode === "ai" && (
         <AIPromptEditor
           onCancel={() => {
-            // await updateSentence(sentence?.hash || "", draft);
             setEditMode("none");
             setIsEditing(false);
           }}

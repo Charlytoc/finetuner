@@ -42,3 +42,11 @@ export const generateSentenceBrief = async (formData: FormData) => {
     throw new Error("Hubo un error al generar el resumen de la sentencia");
   }
 };
+
+export const sendFeedback = async (hash: string, feedback: string) => {
+  const response = await api.post(`/feedback`, {
+    hash,
+    feedback,
+  });
+  return response.data;
+};

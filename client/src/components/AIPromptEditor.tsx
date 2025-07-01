@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SuperButton } from "./SuperButton";
 import toast from "react-hot-toast";
-import { requestChanges, updateSentence } from "../modules/lib";
+import { requestChanges, sendFeedback, updateSentence } from "../modules/lib";
 import { useStore } from "../modules/store";
 import { EditActions } from "./EditActions";
 import { Markdowner } from "./Markdowner";
 import { useSentencePolling } from "../hooks/useSentencePolling";
+
+export const wasRejected = (draft: string) => {
+  // Regex para todas las variantes de la tag <REJECTED>
+  const rejectedTagRegex = /<\s*rejected\s*\/?\s*>/gi;
+  const rejected = rejectedTagRegex.test(draft);
+  const cleanDraft = draft.replace(rejectedTagRegex, "").trim();
+  return { rejected, cleanDraft };
+};
 
 type Props = {
   onCancel: () => void;
@@ -15,6 +23,8 @@ type Props = {
 export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
   const sentence = useStore((state) => state.sentence);
   const setSentence = useStore((state) => state.setSentence);
+  const lastPromptRef = useRef<string>("");
+  const [error, setError] = useState<string>("");
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [draft, setDraft] = useState(sentence?.sentence || "");
@@ -24,11 +34,29 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    const { rejected, cleanDraft } = wasRejected(draft);
+    if (rejected) {
+      setError(cleanDraft);
+      setDraft(sentence?.sentence || "");
+    }
+  }, [draft]);
+
   useSentencePolling(
     sentence?.hash || "",
     sentence?.sentence || "",
     handleFinish,
-    loading
+    loading,
+    10000,
+    50,
+    (err) => {
+      console.error("Error al actualizar la sentencia", err);
+      toast.error(
+        "Hubo un error al actualizar la sentencia, por favor intenta nuevamente"
+      );
+      setLoading(false);
+      setIsEditing(false);
+    }
   );
 
   const handleSubmit = async () => {
@@ -39,6 +67,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
     try {
       setLoading(true);
       setIsEditing(true);
+      lastPromptRef.current = prompt;
 
       const changes = await requestChanges(
         sentence?.hash || "",
@@ -47,6 +76,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
       );
       console.log("changes response", changes);
       setPrompt("");
+      setError("");
     } catch (err) {
       console.error(err);
       toast.error("Hubo un error al actualizar la sentencia");
@@ -64,8 +94,11 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
         sentence: draft,
         status: "SUCCESS",
       });
+      await sendFeedback(sentence?.hash || "", lastPromptRef.current);
       onCancel();
       setPrompt("");
+      setError("");
+      lastPromptRef.current = "";
     } catch (err) {
       console.error(err);
       toast.error("Hubo un error al actualizar la sentencia");
@@ -84,7 +117,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
         </div>
       ) : (
         <>
-          {draft !== sentence?.sentence ? (
+          {draft !== sentence?.sentence && !error && (
             <div className="mt-4 flex gap-2 items-center justify-center">
               <EditActions
                 onAccept={handleAccept}
@@ -95,7 +128,13 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
                 }}
               />
             </div>
-          ) : (
+          )}
+          {draft === sentence?.sentence && error && (
+            <div className="mt-4 flex gap-2 items-center justify-center">
+              <div className="text-red-500">{error}</div>
+            </div>
+          )}
+          {(!draft || draft === sentence?.sentence) && (
             <div className="flex flex-col gap-2 items-center justify-center">
               <textarea
                 className="w-full resize-none p-2 rounded-md border mt-4"
@@ -117,14 +156,10 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
                   <SuperButton
                     className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
                     onClick={async () => {
-                      if (sentence?.hash && sentence?.sentence) {
-                        await updateSentence(
-                          sentence?.hash,
-                          sentence?.sentence
-                        );
-                      }
                       onCancel();
                       setPrompt("");
+                      setError("");
+                      lastPromptRef.current = "";
                     }}
                   >
                     Cancelar

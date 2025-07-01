@@ -116,7 +116,7 @@ export const FileUploader: React.FC<Props> = ({
           />
           <FileInput
             label="Documentos"
-            accept=".pdf,.doc,.docx,.txt"
+            accept=".pdf,.docx,.md"
             multiple={true}
             name="documents"
             onChange={setDocuments}

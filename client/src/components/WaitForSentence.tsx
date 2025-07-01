@@ -23,7 +23,7 @@ export const WaitForSentence: React.FC<WaitForSentenceProps> = ({
   onSuccess,
   onError,
   pollingInterval = 30000,
-  maxRetries = 30,
+  maxRetries = 50,
 }) => {
   const retries = useRef(0);
   const [exceeded, setExceeded] = useState(false);
