@@ -84,7 +84,9 @@ echo "Instalando requirements.txt…"
 # 4) Arrancamos la app
 # ----------------------------------------
 APP_MODULE="main:app"
-PORT="${PORT:-8000}"
+# PORT="${PORT:-8006}"
+PORT=8006
+
 
 if [[ "$MODE" == "prod" ]]; then
   echo "Iniciando app con Gunicorn (modo producción)…"
