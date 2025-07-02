@@ -75,6 +75,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
       setIsEditing(true);
       lastPromptRef.current = prompt;
 
+      setError("");
       const changes = await requestChanges(
         sentence?.hash || "",
         prompt,
@@ -82,7 +83,6 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
       );
       console.log("changes response", changes);
       setPrompt("");
-      setError("");
     } catch (err) {
       console.error(err);
       toast.error("Hubo un error al actualizar la sentencia");
@@ -135,11 +135,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
               />
             </div>
           )}
-          {draft === sentence?.sentence && error && (
-            <div className="mt-4 flex gap-2 items-center justify-center">
-              <div className="text-red-500">{error}</div>
-            </div>
-          )}
+
           {(!draft || draft === sentence?.sentence) && (
             <div className="flex flex-col gap-2 items-center justify-center">
               <div className="text-sm text-gray-500 bg-yellow-100 p-2 rounded-md w-full mt-4">
@@ -158,6 +154,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
                   que se mencione al juez".
                 </p>
               </div>
+
               <textarea
                 className="w-full resize-none p-2 rounded-md border mt-4"
                 placeholder="Describe los cambios que quieres..."
@@ -165,6 +162,17 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={3}
               />
+              {error && (
+                <div className="mt-4 flex gap-2 items-center justify-center bg-red-100 p-5 rounded-md w-full relative">
+                  <div className="text-red-500">{error}</div>
+                  <div
+                    className="text-red-500 absolute top-0 right-2 cursor-pointer"
+                    onClick={() => setError("")}
+                  >
+                    x
+                  </div>
+                </div>
+              )}
               <div className="flex gap-2 items-center justify-center">
                 <SuperButton
                   loadingText="Procesando..."
@@ -174,6 +182,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
                 >
                   Enviar solicitud
                 </SuperButton>
+
                 {!loading && (
                   <SuperButton
                     className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
