@@ -123,7 +123,7 @@ fi
 
 if [[ "$MODE" == "prod" && "$IS_LINUX_OR_MAC" -eq 1 ]]; then
   echo "Iniciando app con Gunicorn (modo producción, Linux/Mac)…"
-  "$VENV_PYTHON" -m gunicorn "$APP_MODULE" -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --workers 4
+  "$VENV_PYTHON" -m gunicorn "$APP_MODULE" -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --workers 1
 else
   echo "Iniciando app con Uvicorn (modo desarrollo o Windows)…"
   "$VENV_PYTHON" -m uvicorn "$APP_MODULE" --host 0.0.0.0 --port $PORT --reload
