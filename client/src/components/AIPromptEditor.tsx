@@ -148,8 +148,8 @@ const Chat = ({
   const handleFinish = (value: TSentenceData) => {
     console.log("value", value);
     if (
-      value.workflow === "update" ||
-      !value.rejected ||
+      value.workflow === "update" &&
+      !value.rejected &&
       value.brief !== "unchanged"
     ) {
       onNewDraft(value.brief);
@@ -302,9 +302,7 @@ const FeedbackManager = ({
     await sendFeedback(sentence?.hash || "", feedback.text);
     toast.success("Feedback enviado correctamente", { id });
     setFeedbackList((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, saved: true } : item
-      )
+      prev.map((item, i) => (i === index ? { ...item, saved: true } : item))
     );
   };
 
