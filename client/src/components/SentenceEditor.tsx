@@ -9,6 +9,26 @@ import type { EditMode } from "./types";
 import toast from "react-hot-toast";
 import { WaitForSentence } from "./WaitForSentence";
 
+const Header = () => {
+  return (
+    <div className="flex flex-col items-center gap-4 bg-gray-100 p-4 rounded-md w-fit sm:justify-center bg-yellow-100 text-center mt-4">
+      <p>
+        Bienvenido al Entrenador para el Intérprete de Sentencias en Lenguaje de
+        Fácil Comprensión
+      </p>
+      <p>
+        El objetivo de esta aplicación es capacitar al modelo de Inteligencia
+        Artificial para que Genere Sentencias en un lenguaje de fácil
+        comprensión para cualquier ciudadano sin la necesidad de que conozca
+        términos jurídicos a fin de acercar la Justicia. Puedes ver las
+        instrucciones presionando el botón de <strong>instrucciones </strong>
+        abajo. Sube tus archivos presionando el botón de{" "}
+        <strong>subir archivos</strong>.
+      </p>
+    </div>
+  );
+};
+
 export const SentenceEditor = () => {
   const sentence = useStore((state) => state.sentence);
   const setSentence = useStore((s) => s.setSentence);
@@ -19,19 +39,19 @@ export const SentenceEditor = () => {
 
   const [editMode, setEditMode] = useState<EditMode>("none");
 
-  const handleSaveManual = async (newSentence: string) => {
-    if (!newSentence.trim()) return;
-    try {
-      setSentence({
-        hash: sentence?.hash || "",
-        sentence: newSentence,
-        status: "SUCCESS",
-      });
-      setEditMode("none");
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // const handleSaveManual = async (newSentence: string) => {
+  //   if (!newSentence.trim()) return;
+  //   try {
+  //     setSentence({
+  //       hash: sentence?.hash || "",
+  //       sentence: newSentence,
+  //       status: "SUCCESS",
+  //     });
+  //     setEditMode("none");
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
 
   const handleUploadSuccess = ({
     brief,
@@ -93,21 +113,7 @@ export const SentenceEditor = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-auto flex flex-col items-center mb-20">
-      <div className="flex flex-col items-center gap-4 bg-gray-100 p-4 rounded-md w-fit sm:justify-center bg-yellow-100 text-center mt-4">
-        <p>
-          Bienvenido al Entrenador para el Intérprete de Sentencias en Lenguaje
-          de Fácil Comprensión
-        </p>
-        <p>
-          El objetivo de esta aplicación es capacitar al modelo de Inteligencia
-          Artificial para que Genere Sentencias en un lenguaje de fácil
-          comprensión para cualquier ciudadano sin la necesidad de que conozca
-          términos jurídicos a fin de acercar la Justicia. Puedes ver las
-          instrucciones presionando el botón de <strong>instrucciones </strong>
-          abajo. Sube tus archivos presionando el botón de{" "}
-          <strong>subir archivos</strong>.
-        </p>
-      </div>
+      {editMode === "none" && <Header />}
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-gray-100 p-4 rounded-md w-fit sm:justify-center">
         <InstructionsModal />
         <FileUploader
@@ -115,7 +121,6 @@ export const SentenceEditor = () => {
           onUploadSuccess={handleUploadSuccess}
         />
       </div>
-
       {sentence && sentence.status === "QUEUED" && (
         <WaitForSentence
           hash={sentence.hash}
@@ -124,38 +129,33 @@ export const SentenceEditor = () => {
           onError={handleUploadError}
         />
       )}
-
-      {sentence && editMode !== "ai" && sentence.status === "SUCCESS" && (
-        <div className="flex flex-col items-center gap-4 mt-10 bg-gray-200 p-4 rounded-md w-full">
-          <Markdowner
-            markdown={sentence?.sentence || ""}
-            allowEdit={editMode === "manual"}
-            onSave={handleSaveManual}
-            onCancel={() => setEditMode("none")}
-          />
-          {warning && editMode === "none" && (
-            <Markdowner className="text-red-400 text-sm" markdown={warning} />
-          )}
-        </div>
-      )}
-
-      {editMode === "none" && sentence && sentence?.status === "SUCCESS" && (
-        <div className="flex flex-col items-center gap-4 mt-4">
-          <h2 className="text-md mt-4">
-            ¿Consideras que se debe cambiar algo de esta interpretación de
-            sentencia? Edítala manualmente o solicita los cambios a la IA.
-          </h2>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="button-pj" onClick={() => setEditMode("manual")}>
-              Editar manualmente
-            </button>
-            <button className="button-pj" onClick={() => setEditMode("ai")}>
-              Solicitar cambios a la IA
-            </button>
+      {sentence && editMode === "none" && sentence.status === "SUCCESS" && (
+        <>
+          <div className="flex flex-col items-center gap-4 mt-10 bg-gray-200 p-4 rounded-md w-full">
+            <Markdowner
+              markdown={sentence?.sentence || ""}
+              allowEdit={false}
+              // onSave={handleSaveManual}
+              onCancel={() => setEditMode("none")}
+            />
+            {warning && editMode === "none" && (
+              <Markdowner className="text-red-400 text-sm" markdown={warning} />
+            )}
           </div>
-        </div>
-      )}
 
+          <div className="flex flex-col items-center gap-4 mt-4">
+            <h2 className="text-md mt-4">
+              ¿Consideras que se debe cambiar algo de esta interpretación de
+              sentencia? Solicita los cambios necesarios a la IA.
+            </h2>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button className="button-pj" onClick={() => setEditMode("ai")}>
+                Solicitar cambios a la IA
+              </button>
+            </div>
+          </div>
+        </>
+      )}
       {editMode === "ai" && (
         <AIPromptEditor
           onCancel={() => {

@@ -1,10 +1,20 @@
 import { useEffect, useRef } from "react";
 import { getSentence } from "../modules/lib";
 
+export type TSentenceData = {
+  status: "SUCCESS" | "ERROR";
+  message: string;
+  brief: string;
+  hash: string;
+  warning: string;
+  rejected: boolean;
+  workflow: "question" | "update" | "rejected";
+};
+
 export const useSentencePolling = (
   hash: string,
   current: string,
-  onFinish: (value: string) => void,
+  onFinish: (value: TSentenceData) => void,
   loading: boolean,
   interval: number = 10000,
   maxRetries: number = 50,
@@ -21,9 +31,9 @@ export const useSentencePolling = (
     const poll = async () => {
       try {
         const data = await getSentence(hash);
-        if (data?.brief) {
-          console.log("✅ Draft actualizado automáticamente por polling");
-          onFinish(data.brief);
+        if (data?.status === "SUCCESS") {
+          console.log("✅ Sentencia encontrada en caché");
+          onFinish(data);
           clearInterval(pollRef.current!);
         } else {
           retries.current += 1;

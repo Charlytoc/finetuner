@@ -1,11 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { SuperButton } from "./SuperButton";
 import toast from "react-hot-toast";
-import { requestChanges, sendFeedback } from "../modules/lib";
+import { requestChanges } from "../modules/lib";
 import { useStore } from "../modules/store";
 import { EditActions } from "./EditActions";
 import { Markdowner } from "./Markdowner";
-import { useSentencePolling } from "../hooks/useSentencePolling";
+import {
+  useSentencePolling,
+  type TSentenceData,
+} from "../hooks/useSentencePolling";
 
 export const wasRejected = (draft: string) => {
   // Regex para todas las variantes de la tag <REJECTED>
@@ -20,25 +23,17 @@ type Props = {
   setIsEditing: (isEditing: boolean) => void;
 };
 
+type TMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
   const sentence = useStore((state) => state.sentence);
   const setSentence = useStore((state) => state.setSentence);
-  const lastPromptRef = useRef<string>("");
   const [error, setError] = useState<string>("");
-  const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [draft, setDraft] = useState(sentence?.sentence || "");
-
-  const handleFinish = (value: string) => {
-    if (value === sentence?.sentence) {
-      setError(
-        "Ha habido un error al actualizar la sentencia, por favor intenta nuevamente, asegúrate de incluir indicaciones claras y específicas para que la IA pueda entender lo que quieres cambiar. Si tu solicitud no es clara o no tiene nada que ver con la sentencia, no será posible actualizar la sentencia."
-      );
-    } else {
-      setDraft(value);
-    }
-    setLoading(false);
-  };
 
   useEffect(() => {
     const { rejected, cleanDraft } = wasRejected(draft);
@@ -47,6 +42,118 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
       setDraft(sentence?.sentence || "");
     }
   }, [draft]);
+
+  const handleSubmit = async (prompt: string) => {
+    if (!prompt.trim()) {
+      toast.error("El prompt no puede estar vacío");
+      return;
+    }
+    try {
+      setLoading(true);
+      setIsEditing(true);
+
+      setError("");
+      const changes = await requestChanges(
+        sentence?.hash || "",
+        prompt,
+        sentence?.sentence || ""
+      );
+      console.log("changes response", changes);
+    } catch (err) {
+      console.error(err);
+      toast.error("Hubo un error al actualizar la sentencia");
+      setLoading(false);
+      setIsEditing(false);
+    }
+  };
+
+  const handleAccept = async () => {
+    if (!draft.trim()) return;
+    try {
+      setSentence({
+        hash: sentence?.hash || "",
+        sentence: draft,
+        status: "SUCCESS",
+      });
+      setError("");
+    } catch (err) {
+      console.error(err);
+      toast.error("Hubo un error al actualizar la sentencia");
+    }
+  };
+  return (
+    <div className="flex flex-col flex-col-reverse lg:flex-row  gap-4 mt-10 p-4 rounded-md w-full">
+      <Chat
+        onSubmit={handleSubmit}
+        onCancel={onCancel}
+        loading={loading}
+        onNewDraft={setDraft}
+        onPollingError={() => {
+          setLoading(false);
+          setIsEditing(false);
+        }}
+        setIsLoading={setLoading}
+      />
+      <div className="bg-gray-200 p-4 rounded-md w-full flex flex-col gap-2">
+        <Markdowner markdown={draft} allowEdit={false} />
+        {draft !== sentence?.sentence && !error && (
+          <div className="mt-4 flex gap-2 items-center justify-center">
+            <EditActions
+              onAccept={handleAccept}
+              onReject={() => {
+                setDraft(sentence?.sentence || "");
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const Chat = ({
+  onSubmit,
+  onCancel,
+  loading,
+  onNewDraft,
+  onPollingError,
+  setIsLoading,
+}: // draft,
+{
+  onSubmit: (prompt: string) => void;
+  onCancel: () => void;
+  loading: boolean;
+  onNewDraft: (draft: string) => void;
+  onPollingError: () => void;
+  setIsLoading: (isLoading: boolean) => void;
+  // draft: string;
+}) => {
+  const sentence = useStore((state) => state.sentence);
+  const [prompt, setPrompt] = useState("");
+  const [messages, setMessages] = useState<TMessage[]>([
+    {
+      role: "assistant",
+      content:
+        "Hola, soy el Intérprete de Sentencias. ¿Cómo podemos mejorar esta interpretación? Escribe una instrucción clara y específica para que pueda entenderte claramente.",
+    },
+  ]);
+
+  const handleFinish = (value: TSentenceData) => {
+    console.log("value", value);
+    if (value.workflow === "update") {
+      console.log("updated by AI", value.brief);
+      onNewDraft(value.brief);
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: value.message,
+      },
+    ]);
+    setIsLoading(false);
+  };
 
   useSentencePolling(
     sentence?.hash || "",
@@ -60,147 +167,93 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
       toast.error(
         "Hubo un error al actualizar la sentencia, por favor intenta nuevamente"
       );
-      setLoading(false);
-      setIsEditing(false);
+      onPollingError();
     }
   );
-
-  const handleSubmit = async () => {
-    if (!prompt.trim()) {
-      toast.error("El prompt no puede estar vacío");
-      return;
-    }
-    try {
-      setLoading(true);
-      setIsEditing(true);
-      lastPromptRef.current = prompt;
-
-      setError("");
-      const changes = await requestChanges(
-        sentence?.hash || "",
-        prompt,
-        sentence?.sentence || ""
-      );
-      console.log("changes response", changes);
-      setPrompt("");
-    } catch (err) {
-      console.error(err);
-      toast.error("Hubo un error al actualizar la sentencia");
-      setLoading(false);
-      setIsEditing(false);
-    }
-  };
-
-  const handleAccept = async () => {
-    if (!draft.trim()) return;
-    try {
-      // await updateSentence(sentence?.hash || "", draft);
-      setSentence({
-        hash: sentence?.hash || "",
-        sentence: draft,
-        status: "SUCCESS",
-      });
-      await sendFeedback(sentence?.hash || "", lastPromptRef.current);
-      onCancel();
-      setPrompt("");
-      setError("");
-      lastPromptRef.current = "";
-    } catch (err) {
-      console.error(err);
-      toast.error("Hubo un error al actualizar la sentencia");
-    }
-  };
   return (
-    <div className="mt-4 w-full">
-      <div className="flex flex-col items-center gap-4 mt-10 bg-gray-200 p-4 rounded-md w-full">
-        <Markdowner markdown={draft} allowEdit={false} />
+    <div className="flex flex-col gap-2 w-full lg:max-w-[550px]">
+      <div className="flex flex-col gap-2 w-full">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex flex-col gap-2 p-2 rounded-md w-fit border border-gray-200 ${
+              message.role === "user"
+                ? "items-end bg-blue-100 self-end"
+                : "items-start self-start"
+            }`}
+          >
+            <div className="text-sm text-gray-500">
+              {message.role === "assistant" ? "Intérprete" : "Tú"}
+            </div>
+            <div className="text-sm">{message.content}</div>
+          </div>
+        ))}
       </div>
 
-      {loading ? (
-        <div className="flex flex-col gap-2 items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-          <div>Procesando...</div>
-        </div>
-      ) : (
-        <>
-          {draft !== sentence?.sentence && !error && (
-            <div className="mt-4 flex gap-2 items-center justify-center">
-              <EditActions
-                onAccept={handleAccept}
-                onReject={() => {
-                  setDraft(sentence?.sentence || "");
-                  setPrompt("");
-                  onCancel();
-                }}
-              />
-            </div>
-          )}
-
-          {(!draft || draft === sentence?.sentence) && (
-            <div className="flex flex-col gap-2 items-center justify-center">
-              <div className="text-sm text-gray-500 bg-yellow-100 p-2 rounded-md w-full mt-4">
-                <p>
-                  La solicitud enviada debe de ser para mejorar la
-                  interpretación,{" "}
-                  <strong>
-                    la retroalimentación será usada para futuras
-                    interpretaciones
-                  </strong>
-                  . En el recuadro de texto, escribe una{" "}
-                  <strong>instrucción clara y específica</strong> para que la IA
-                  pueda entender lo que quieres cambiar del resultado anterior.
-                  Por ejemplo: "Coloca en negrita el nombre de los involucrados"
-                  o "En vez de juez, debe decir 'la persona juzgadora' cada vez
-                  que se mencione al juez".
-                </p>
-              </div>
-
-              <textarea
-                className="w-full resize-none p-2 rounded-md border mt-4"
-                placeholder="Describe los cambios que quieres..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                rows={3}
-              />
-              {error && (
-                <div className="mt-4 flex gap-2 items-center justify-center bg-red-100 p-5 rounded-md w-full relative">
-                  <div className="text-red-500">{error}</div>
-                  <div
-                    className="text-red-500 absolute top-0 right-2 cursor-pointer"
-                    onClick={() => setError("")}
-                  >
-                    x
-                  </div>
-                </div>
-              )}
-              <div className="flex gap-2 items-center justify-center">
-                <SuperButton
-                  loadingText="Procesando..."
-                  className="button-pj mt-2"
-                  onClick={handleSubmit}
-                  disabled={loading || !prompt.trim()}
+      {/* <>
+        {(!draft || draft === sentence?.sentence) && (
+          <div className="flex flex-col gap-2 items-center justify-center w-full">
+            {error && (
+              <div className="mt-4 flex gap-2 items-center justify-center bg-red-100 p-5 rounded-md w-full relative">
+                <div className="text-red-500">{error}</div>
+                <div
+                  className="text-red-500 absolute top-0 right-2 cursor-pointer"
+                  onClick={() => setError("")}
                 >
-                  Enviar solicitud
-                </SuperButton>
-
-                {!loading && (
-                  <SuperButton
-                    className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
-                    onClick={async () => {
-                      onCancel();
-                      setPrompt("");
-                      setError("");
-                      lastPromptRef.current = "";
-                    }}
-                  >
-                    Cancelar
-                  </SuperButton>
-                )}
+                  x
+                </div>
               </div>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </div>
+        )}
+      </> */}
+      <textarea
+        className="w-full resize-none p-2 rounded-md border mt-4"
+        placeholder="Describe los cambios que quieres..."
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        rows={3}
+      />
+
+      <div className="flex gap-2 items-center justify-center">
+        <SuperButton
+          loadingText="Procesando..."
+          className="button-pj mt-2"
+          onClick={() => {
+            setMessages([
+              ...messages,
+              {
+                role: "user",
+                content: prompt,
+              },
+            ]);
+            onSubmit(prompt);
+            setPrompt("");
+          }}
+          disabled={loading || !prompt.trim()}
+        >
+          Enviar solicitud
+        </SuperButton>
+
+        {!loading && (
+          <SuperButton
+            className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
+            onClick={async () => {
+              onCancel();
+              setPrompt("");
+            }}
+          >
+            Terminar
+          </SuperButton>
+        )}
+      </div>
     </div>
   );
 };
+
+// {loading && (
+//   <div className="flex flex-col gap-2 items-center justify-center">
+//     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+//     <div>Procesando...</div>
+//   </div>
+// )}

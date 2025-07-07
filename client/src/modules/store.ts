@@ -54,7 +54,11 @@ export const useStore = create<StoreState>()(
     }),
     {
       name: "app-store",
-      partialize: (state) => ({ user: state.user }),
+      partialize: (state) => ({
+        user: state.user,
+        sentence: state.sentence,
+        warning: state.warning,
+      }),
     }
   )
 );

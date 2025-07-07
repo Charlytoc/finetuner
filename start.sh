@@ -114,10 +114,17 @@ echo "Instalando requirements.txt…"
 # ----------------------------------------
 APP_MODULE="main:app"
 
-if [[ "$MODE" == "prod" ]]; then
-  echo "Iniciando app con Gunicorn (modo producción)…"
+# Detectar sistema operativo
+if [[ "$(uname -s 2>/dev/null)" =~ (Linux|Darwin) ]]; then
+  IS_LINUX_OR_MAC=1
+else
+  IS_LINUX_OR_MAC=0
+fi
+
+if [[ "$MODE" == "prod" && "$IS_LINUX_OR_MAC" -eq 1 ]]; then
+  echo "Iniciando app con Gunicorn (modo producción, Linux/Mac)…"
   "$VENV_PYTHON" -m gunicorn "$APP_MODULE" -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --workers 4
 else
-  echo "Iniciando app con Uvicorn (modo desarrollo)…"
+  echo "Iniciando app con Uvicorn (modo desarrollo o Windows)…"
   "$VENV_PYTHON" -m uvicorn "$APP_MODULE" --host 0.0.0.0 --port $PORT --reload
 fi
