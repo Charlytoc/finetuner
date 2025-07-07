@@ -142,12 +142,15 @@ async def proxy_request_changes(hash: str, request: Request):
     try:
         body = await request.json()
         print("body request-changes: ", body)
+        username = request.headers.get("username")
+        print("username: ", username)
         async with httpx.AsyncClient(
             timeout=Timeout(MAX_TIMEOUT, read=MAX_TIMEOUT)
         ) as client:
             response = await client.post(
                 f"{SENTENCIAS_API_URL}/api/sentencia/{hash}/request-changes",
                 json=body,
+                headers={"username": username},
             )
         if response.status_code < 400:
             csv_logger.log(
@@ -306,4 +309,78 @@ async def feedback_proxy(request: Request):
             message=str(e),
             exit_status=1,
         )
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate-feedback", summary="Generar feedback")
+async def generate_feedback_proxy(request: Request):
+    try:
+        body = await request.json()
+        print("body generate-feedback: ", body)
+        async with httpx.AsyncClient(
+            timeout=Timeout(MAX_TIMEOUT, read=MAX_TIMEOUT)
+        ) as client:
+            response = await client.post(
+                f"{SENTENCIAS_API_URL}/api/generate-feedback",
+                json=body,
+            )
+        if response.status_code < 400:
+            csv_logger.log(
+                endpoint="POST /generate-feedback",
+                http_status=response.status_code,
+                hash_="N/A",
+                message=response.text,
+                exit_status=0,
+            )
+        else:
+            csv_logger.log(
+                endpoint="POST /generate-feedback",
+                http_status=response.status_code,
+                hash_="N/A",
+                message=response.text,
+                exit_status=1,
+            )
+        return Response(
+            content=response.content,
+            status_code=response.status_code,
+            media_type=response.headers.get("content-type", "application/json"),
+        )
+    except Exception as e:
+        csv_logger.log(
+            endpoint="POST /generate-feedback",
+            http_status=500,
+            hash_="N/A",
+            message=str(e),
+            exit_status=1,
+        )
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/feedback/{hash}", summary="Obtener feedback generado")
+async def get_generated_feedback(hash: str):
+    try:
+        async with httpx.AsyncClient(
+            timeout=Timeout(MAX_TIMEOUT, read=MAX_TIMEOUT)
+        ) as client:
+            response = await client.get(
+                f"{SENTENCIAS_API_URL}/api/feedback/{hash}",
+            )
+        if response.status_code < 400:
+            return Response(
+                content=response.content,
+                status_code=response.status_code,
+                media_type=response.headers.get("content-type", "application/json"),
+            )
+        else:
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+    except HTTPException as e:
+        csv_logger.log(
+            endpoint="GET /feedback/{hash}",
+            http_status=e.status_code,
+            hash_=hash,
+            message=e.detail,
+            exit_status=1,
+        )
+        raise
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

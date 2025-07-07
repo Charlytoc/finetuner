@@ -18,12 +18,23 @@ export const getSentence = async (hash: string) => {
 export const requestChanges = async (
   hash: string,
   feedback: string,
-  sentence: string
+  sentence: string,
+  messages: string,
+  username: string
 ) => {
-  const response = await api.post(`/sentencia/${hash}/request-changes`, {
-    changes: feedback,
-    sentence: sentence,
-  });
+  const response = await api.post(
+    `/sentencia/${hash}/request-changes`,
+    {
+      changes: feedback,
+      sentence: sentence,
+      prev_messages: messages,
+    },
+    {
+      headers: {
+        username: username,
+      },
+    }
+  );
   return response.data;
 };
 
@@ -43,5 +54,30 @@ export const sendFeedback = async (hash: string, feedback: string) => {
     hash,
     feedback,
   });
+  return response.data;
+};
+
+export const generateFeedback = async (
+  hash: string,
+  messages: string,
+  username: string
+) => {
+  const response = await api.post(
+    `/generate-feedback`,
+    {
+      hash,
+      messages,
+    },
+    {
+      headers: {
+        username: username,
+      },
+    }
+  );
+  return response.data;
+};
+
+export const getGeneratedFeedback = async (hash: string) => {
+  const response = await api.get(`/feedback/${hash}`);
   return response.data;
 };

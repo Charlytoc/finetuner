@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SuperButton } from "./SuperButton";
 import toast from "react-hot-toast";
-import { requestChanges } from "../modules/lib";
+import { generateFeedback, requestChanges, sendFeedback } from "../modules/lib";
 import { useStore } from "../modules/store";
 import { EditActions } from "./EditActions";
 import { Markdowner } from "./Markdowner";
@@ -9,6 +9,11 @@ import {
   useSentencePolling,
   type TSentenceData,
 } from "../hooks/useSentencePolling";
+import {
+  useFeedbackPolling,
+  type TFeedbackData,
+} from "../hooks/useFeedbackPolling";
+import { Modal } from "./Modal";
 
 export const wasRejected = (draft: string) => {
   // Regex para todas las variantes de la tag <REJECTED>
@@ -31,6 +36,7 @@ type TMessage = {
 export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
   const sentence = useStore((state) => state.sentence);
   const setSentence = useStore((state) => state.setSentence);
+  const user = useStore((state) => state.user);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [draft, setDraft] = useState(sentence?.sentence || "");
@@ -43,7 +49,7 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
     }
   }, [draft]);
 
-  const handleSubmit = async (prompt: string) => {
+  const handleSubmit = async (prompt: string, messages: string) => {
     if (!prompt.trim()) {
       toast.error("El prompt no puede estar vacío");
       return;
@@ -56,7 +62,9 @@ export const AIPromptEditor = ({ onCancel, setIsEditing }: Props) => {
       const changes = await requestChanges(
         sentence?.hash || "",
         prompt,
-        sentence?.sentence || ""
+        sentence?.sentence || "",
+        messages,
+        user?.username || "Anónimo"
       );
       console.log("changes response", changes);
     } catch (err) {
@@ -118,18 +126,17 @@ const Chat = ({
   onNewDraft,
   onPollingError,
   setIsLoading,
-}: // draft,
-{
-  onSubmit: (prompt: string) => void;
+}: {
+  onSubmit: (prompt: string, messages: string) => void;
   onCancel: () => void;
   loading: boolean;
   onNewDraft: (draft: string) => void;
   onPollingError: () => void;
   setIsLoading: (isLoading: boolean) => void;
-  // draft: string;
 }) => {
   const sentence = useStore((state) => state.sentence);
   const [prompt, setPrompt] = useState("");
+
   const [messages, setMessages] = useState<TMessage[]>([
     {
       role: "assistant",
@@ -140,8 +147,11 @@ const Chat = ({
 
   const handleFinish = (value: TSentenceData) => {
     console.log("value", value);
-    if (value.workflow === "update") {
-      console.log("updated by AI", value.brief);
+    if (
+      value.workflow === "update" ||
+      !value.rejected ||
+      value.brief !== "unchanged"
+    ) {
       onNewDraft(value.brief);
     }
 
@@ -160,8 +170,8 @@ const Chat = ({
     sentence?.sentence || "",
     handleFinish,
     loading,
-    10000,
-    50,
+    4000,
+    100,
     (err) => {
       console.error("Error al actualizar la sentencia", err);
       toast.error(
@@ -170,6 +180,7 @@ const Chat = ({
       onPollingError();
     }
   );
+
   return (
     <div className="flex flex-col gap-2 w-full lg:max-w-[550px]">
       <div className="flex flex-col gap-2 w-full">
@@ -188,25 +199,14 @@ const Chat = ({
             <div className="text-sm">{message.content}</div>
           </div>
         ))}
-      </div>
-
-      {/* <>
-        {(!draft || draft === sentence?.sentence) && (
-          <div className="flex flex-col gap-2 items-center justify-center w-full">
-            {error && (
-              <div className="mt-4 flex gap-2 items-center justify-center bg-red-100 p-5 rounded-md w-full relative">
-                <div className="text-red-500">{error}</div>
-                <div
-                  className="text-red-500 absolute top-0 right-2 cursor-pointer"
-                  onClick={() => setError("")}
-                >
-                  x
-                </div>
-              </div>
-            )}
+        {loading && (
+          <div className="flex flex-col gap-2 items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+            <div>Procesando...</div>
           </div>
         )}
-      </> */}
+      </div>
+
       <textarea
         className="w-full resize-none p-2 rounded-md border mt-4"
         placeholder="Describe los cambios que quieres..."
@@ -227,7 +227,7 @@ const Chat = ({
                 content: prompt,
               },
             ]);
-            onSubmit(prompt);
+            onSubmit(prompt, JSON.stringify(messages));
             setPrompt("");
           }}
           disabled={loading || !prompt.trim()}
@@ -235,25 +235,161 @@ const Chat = ({
           Enviar solicitud
         </SuperButton>
 
-        {!loading && (
-          <SuperButton
-            className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
-            onClick={async () => {
+        {!loading && messages.length > 1 && (
+          <FeedbackManager
+            onFinish={() => {
               onCancel();
-              setPrompt("");
             }}
-          >
-            Terminar
-          </SuperButton>
+            messages={messages}
+          />
         )}
       </div>
     </div>
   );
 };
+type FeedbackItem = {
+  text: string;
+  saved: boolean;
+};
 
-// {loading && (
-//   <div className="flex flex-col gap-2 items-center justify-center">
-//     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-//     <div>Procesando...</div>
-//   </div>
-// )}
+const separatefeedbacks = (text: string): FeedbackItem[] => {
+  return text
+    .split("_sep_")
+    .map((item) => ({ text: item.trim(), saved: false }));
+};
+
+const FeedbackManager = ({
+  onFinish,
+  messages,
+}: {
+  onFinish: () => void;
+  messages: TMessage[];
+}) => {
+  const sentence = useStore((state) => state.sentence);
+  const user = useStore((state) => state.user);
+  const notificationRef = useRef<string>("");
+  const [waitingFeedback, setWaitingFeedback] = useState(false);
+  const [feedbackList, setFeedbackList] = useState<FeedbackItem[]>([]);
+
+  const handleFinishFeedback = (value: TFeedbackData) => {
+    setFeedbackList(separatefeedbacks(value.feedback));
+    setWaitingFeedback(false);
+    toast.success("Feedback generado correctamente", {
+      id: notificationRef.current,
+    });
+  };
+
+  useFeedbackPolling(
+    sentence?.hash || "",
+    handleFinishFeedback,
+    waitingFeedback,
+    4000,
+    100
+  );
+
+  useEffect(() => {
+    if (waitingFeedback) {
+      notificationRef.current = toast.loading(
+        "Generando feedback a partir de la conversación, espera un momento..."
+      );
+    }
+  }, [waitingFeedback]);
+
+  // Handler for accepting feedback
+  const handleAccept = async (index: number) => {
+    const feedback = feedbackList[index];
+    const id = toast.loading("Enviando feedback...");
+    await sendFeedback(sentence?.hash || "", feedback.text);
+    toast.success("Feedback enviado correctamente", { id });
+    setFeedbackList((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, saved: true } : item
+      )
+    );
+  };
+
+  // Handler for removing feedback
+  const handleRemove = (index: number) => {
+    setFeedbackList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  return (
+    <>
+      <Modal
+        isOpen={waitingFeedback || feedbackList.length > 0}
+        onClose={() => {
+          if (waitingFeedback) {
+            toast.error("Espera que termine de generar el feedback");
+          }
+          onFinish();
+        }}
+      >
+        {waitingFeedback && (
+          <div className="flex flex-col gap-2 items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+            <div>Procesando...</div>
+          </div>
+        )}
+        {feedbackList.length > 0 && !waitingFeedback && (
+          <div className="flex flex-col gap-2 items-center justify-center">
+            <h4 className="text-lg font-bold">
+              Por favor revisa la siguiente retroalimentación y selecciona las
+              que deseas aceptar.
+            </h4>
+            <div className="flex flex-col gap-2">
+              {feedbackList.map((feedback, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <div className="text-sm text-gray-500">
+                    {index + 1}. {feedback.text}
+                  </div>
+                  {feedback.saved ? (
+                    <span className="text-green-600 text-xl ml-2">✅</span>
+                  ) : (
+                    <>
+                      <SuperButton
+                        className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
+                        onClick={() => handleRemove(index)}
+                      >
+                        Eliminar
+                      </SuperButton>
+                      <SuperButton
+                        className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
+                        onClick={() => handleAccept(index)}
+                      >
+                        Aceptar
+                      </SuperButton>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+            <SuperButton
+              className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
+              onClick={() => {
+                setWaitingFeedback(false);
+                onFinish();
+              }}
+            >
+              Terminar
+            </SuperButton>
+          </div>
+        )}
+      </Modal>
+      {!waitingFeedback && (
+        <SuperButton
+          className="bg-gray-200 text-black mt-2 px-4 py-2 rounded border border-gray-300 cursor-pointer"
+          onClick={() => {
+            setWaitingFeedback(true);
+            generateFeedback(
+              sentence?.hash || "",
+              JSON.stringify(messages.filter((m) => m.role === "assistant")),
+              user?.username || "Anónimo"
+            );
+          }}
+        >
+          Terminar conversación
+        </SuperButton>
+      )}
+    </>
+  );
+};
